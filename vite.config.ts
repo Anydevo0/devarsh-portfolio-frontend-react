@@ -10,7 +10,7 @@ import { defineConfig } from 'vitest/config'
 // derive from it automatically via import.meta.env.BASE_URL. Use '/' only if the repo
 // is ever named '<username>.github.io' (served at the domain root instead of a subpath).
 // public/404.html's `pathSegmentsToKeep` tracks this same value (segment count).
-const GH_PAGES_BASE = '/portfolio-frontend/'
+const GH_PAGES_BASE = '/devarsh-portfolio-frontend-react/'
 
 export default defineConfig({
   base: GH_PAGES_BASE,
