@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/devarsh-portfolio-frontend-react/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>portfolio-frontend</title>
+    <!--
+      GitHub Pages SPA redirect restore (rafgraph/spa-github-pages pattern).
+      public/404.html encodes the real path into a `?/...` query string and redirects
+      here; this script decodes it and rewrites the URL back to the clean path via
+      history.replaceState BEFORE BrowserRouter ever reads location.pathname. Must run
+      before the module script below.
+    -->
+    <script>
+      ;(function (l) {
+        if (l.search[1] === '/') {
+          var decoded = l.search
+            .slice(1)
+            .split('&')
+            .map(function (s) {
+              return s.replace(/~and~/g, '&')
+            })
+            .join('?')
+          window.history.replaceState(null, '', l.pathname.slice(0, -1) + decoded + l.hash)
+        }
+      })(window.location)
+    </script>
+    <script type="module" crossorigin src="/devarsh-portfolio-frontend-react/assets/index-CN4zMtx2.js"></script>
+    <link rel="stylesheet" crossorigin href="/devarsh-portfolio-frontend-react/assets/index-CnNSbWIG.css">
+  </head>
+  <body>
+    <div id="root"></div>
+  </body>
+</html>
