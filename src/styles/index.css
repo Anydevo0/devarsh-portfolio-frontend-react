@@ -1,0 +1,84 @@
+@import 'tailwindcss';
+@plugin '@tailwindcss/typography';
+
+@theme {
+  --color-ink: #14171f;
+  --color-paper: #f1f2ee;
+  --color-signal: #c9791f;
+  --color-wire: #33625a;
+  --color-line: #cac8bd;
+  --color-mute: #5b5d57;
+  /* Derived, not new hues in the palette — contextual variants of line/mute for use
+     on the one dark `ink` band, where the light-mode values wouldn't have contrast. */
+  --color-line-on-ink: #333949;
+  --color-mute-on-ink: #9aa0ad;
+
+  --font-display: 'Fraunces Variable', ui-serif, Georgia, serif;
+  --font-sans: 'Work Sans Variable', ui-sans-serif, system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono Variable', ui-monospace, 'SFMono-Regular', monospace;
+}
+
+body {
+  background-color: var(--color-paper);
+  color: var(--color-ink);
+}
+
+/* Tailwind Typography, tuned to the design tokens rather than left at its generic
+   defaults — headings pick up the display serif, links use the wire teal accent. */
+.prose {
+  --tw-prose-headings: var(--color-ink);
+  --tw-prose-links: var(--color-wire);
+  --tw-prose-bold: var(--color-ink);
+  --tw-prose-code: var(--color-ink);
+  --tw-prose-quotes: var(--color-mute);
+  --tw-prose-quote-borders: var(--color-line);
+  --tw-prose-hr: var(--color-line);
+}
+.prose :where(h1, h2, h3, h4) {
+  font-family: var(--font-display);
+}
+.prose :where(code) {
+  font-family: var(--font-mono);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Hero's staggered load-in — applied conditionally via usePrefersReducedMotion, not
+   just left to the global reduced-motion override above (belt and suspenders: the
+   class is never added at all when the visitor prefers reduced motion). */
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.animate-rise {
+  animation: rise 0.6s ease-out both;
+}
+
+/* Section-level scroll reveal (via the <Reveal> wrapper + useInView) — fades and
+   rises into place once, the first time a section enters the viewport. */
+.reveal {
+  opacity: 0;
+  transform: translateY(20px);
+  transition:
+    opacity 0.7s ease-out,
+    transform 0.7s ease-out;
+}
+.reveal-visible {
+  opacity: 1;
+  transform: translateY(0);
+}

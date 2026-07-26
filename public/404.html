@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>portfolio-frontend</title>
+    <script>
+      // GitHub Pages SPA fallback (rafgraph/spa-github-pages pattern). GitHub Pages
+      // has no server-side rewrites, so any deep-link path that isn't a real static
+      // file gets served this 404.html instead. This script re-encodes the intended
+      // path into a `?/...` query string and redirects to index.html, whose own
+      // inline script (see index.html) decodes it and restores the clean URL via
+      // history.replaceState before the app mounts.
+      //
+      // pathSegmentsToKeep must equal the number of path segments in vite.config.ts's
+      // GH_PAGES_BASE (1 for any named project repo, e.g. /portfolio-frontend/; 0 only
+      // if this repo is ever renamed to <username>.github.io, served at the domain root).
+      var pathSegmentsToKeep = 1
+
+      var l = window.location
+      l.replace(
+        l.protocol +
+          '//' +
+          l.hostname +
+          (l.port ? ':' + l.port : '') +
+          l.pathname.split('/').slice(0, 1 + pathSegmentsToKeep).join('/') +
+          '/?/' +
+          l.pathname
+            .slice(1)
+            .split('/')
+            .slice(pathSegmentsToKeep)
+            .join('/')
+            .replace(/&/g, '~and~') +
+          (l.search ? '&' + l.search.slice(1).replace(/&/g, '~and~') : '') +
+          l.hash,
+      )
+    </script>
+  </head>
+  <body></body>
+</html>
