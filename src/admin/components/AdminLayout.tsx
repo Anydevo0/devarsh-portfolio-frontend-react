@@ -6,13 +6,16 @@ export function AdminLayout() {
   const { logout } = useAuth()
 
   return (
-    <div className="min-h-screen bg-paper">
+    <div className="bg-paper min-h-screen">
       <header className="mx-auto flex max-w-4xl items-center justify-between px-6 pt-8">
         <div className="flex items-center gap-6">
           <Link to="/admin" className="font-display text-lg font-bold">
             Admin
           </Link>
           <nav className="flex gap-4 text-sm">
+            <Link to="/admin/content" className="text-mute hover:text-wire">
+              Content
+            </Link>
             <Link to="/admin/projects" className="text-mute hover:text-wire">
               Projects
             </Link>
@@ -30,7 +33,7 @@ export function AdminLayout() {
         <button
           type="button"
           onClick={logout}
-          className="font-mono text-sm text-mute hover:text-wire"
+          className="text-mute hover:text-wire font-mono text-sm"
         >
           Log out
         </button>

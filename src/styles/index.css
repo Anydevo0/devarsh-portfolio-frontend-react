@@ -13,9 +13,23 @@
   --color-line-on-ink: #333949;
   --color-mute-on-ink: #9aa0ad;
 
+  /* Public-site ("brand") palette — cool/dark, systems-engineering themed. Scoped to
+     the public marketing pages only (Layout tree); the admin panel deliberately keeps
+     the tokens above untouched rather than being repointed to this palette. */
+  --color-void: #0a0e14;
+  --color-panel: #121a24;
+  --color-mist: #e7ebf3;
+  --color-fog: #8b93a6;
+  --color-pulse: #5b7fff;
+  --color-edge: #1e2733;
+  --color-live: #3ddc97;
+  --color-alert: #ff6b6b;
+
   --font-display: 'Fraunces Variable', ui-serif, Georgia, serif;
   --font-sans: 'Work Sans Variable', ui-sans-serif, system-ui, sans-serif;
   --font-mono: 'JetBrains Mono Variable', ui-monospace, 'SFMono-Regular', monospace;
+  /* Display face for the public site only — see --color-void note above. */
+  --font-tech: 'Space Grotesk Variable', ui-sans-serif, system-ui, sans-serif;
 }
 
 body {
@@ -39,6 +53,28 @@ body {
 }
 .prose :where(code) {
   font-family: var(--font-mono);
+}
+
+/* Public-site markdown variant — layers on top of .prose (add alongside it, e.g.
+   `className="prose prose-tech"`) to swap in the brand tokens without touching the
+   base .prose rule the admin editor's live preview also relies on. */
+.prose-tech {
+  --tw-prose-body: var(--color-mist);
+  --tw-prose-headings: var(--color-mist);
+  --tw-prose-links: var(--color-pulse);
+  --tw-prose-bold: var(--color-mist);
+  --tw-prose-code: var(--color-mist);
+  --tw-prose-quotes: var(--color-fog);
+  --tw-prose-quote-borders: var(--color-edge);
+  --tw-prose-hr: var(--color-edge);
+  --tw-prose-bullets: var(--color-fog);
+  --tw-prose-counters: var(--color-fog);
+  --tw-prose-captions: var(--color-fog);
+  --tw-prose-th-borders: var(--color-edge);
+  --tw-prose-td-borders: var(--color-edge);
+}
+.prose-tech :where(h1, h2, h3, h4) {
+  font-family: var(--font-tech);
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -81,4 +117,129 @@ body {
 .reveal-visible {
   opacity: 1;
   transform: translateY(0);
+}
+
+/* The hero's "available" status dot — a slow breathing pulse, not a blink. Governed
+   by the same global prefers-reduced-motion override above. */
+@keyframes live-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.35;
+  }
+}
+.animate-live-pulse {
+  animation: live-pulse 2.4s ease-in-out infinite;
+}
+
+/* Hero background glow — two large, blurred, slow-drifting gradient blobs behind the
+   node graph. Pure CSS (no extra JS/canvas work) so it stays cheap; classes are only
+   applied when motion is allowed (see Hero.tsx), same belt-and-suspenders pattern as
+   the other animate- classes above. */
+.hero-glow {
+  position: absolute;
+  border-radius: 9999px;
+  filter: blur(90px);
+}
+.hero-glow--one {
+  top: -12%;
+  left: -8%;
+  width: 26rem;
+  height: 26rem;
+  background: radial-gradient(circle, var(--color-pulse) 0%, transparent 70%);
+  opacity: 0.32;
+}
+.hero-glow--two {
+  right: -10%;
+  bottom: -18%;
+  width: 30rem;
+  height: 30rem;
+  background: radial-gradient(circle, var(--color-live) 0%, transparent 70%);
+  opacity: 0.22;
+}
+@keyframes drift-one {
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+  50% {
+    transform: translate(30px, 20px) scale(1.08);
+  }
+}
+@keyframes drift-two {
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+  50% {
+    transform: translate(-25px, -15px) scale(1.05);
+  }
+}
+.animate-drift-one {
+  animation: drift-one 18s ease-in-out infinite;
+}
+.animate-drift-two {
+  animation: drift-two 22s ease-in-out infinite;
+}
+
+/* Hero portrait — a bottom-anchored transparent cutout, not a cropped card. Height is
+   driven by --portrait-scale (set inline from the admin-configurable profileImageScale)
+   so the size adjustment works the same way at every breakpoint. */
+.portrait-img {
+  height: calc(13rem * var(--portrait-scale, 1));
+}
+@media (min-width: 640px) {
+  .portrait-img {
+    height: calc(15rem * var(--portrait-scale, 1));
+  }
+}
+@media (min-width: 1024px) {
+  .portrait-img {
+    height: calc(17rem * var(--portrait-scale, 1));
+  }
+}
+@media (min-width: 1280px) {
+  .portrait-img {
+    height: calc(18rem * var(--portrait-scale, 1));
+  }
+}
+
+/* Soft colored aura behind the cutout — ties the portrait into the ambient hero-glow
+   blobs rather than looking like a separate decorated card. Intensifies slightly on
+   hover instead of the old floating animation. */
+.portrait-aura {
+  position: absolute;
+  inset: 8% -20% -6% -20%;
+  background:
+    radial-gradient(ellipse at 50% 70%, var(--color-pulse) 0%, transparent 60%),
+    radial-gradient(ellipse at 62% 38%, var(--color-live) 0%, transparent 55%);
+  filter: blur(60px);
+  opacity: 0.32;
+  transition: opacity 0.5s ease-out;
+}
+.group:hover .portrait-aura {
+  opacity: 0.5;
+}
+
+/* A soft pool of light at the portrait's feet — reinforces the "standing inside the
+   page" read for the bottom-anchored layout. Brightens and widens slightly on hover. */
+.portrait-ring {
+  position: absolute;
+  left: 50%;
+  bottom: -1rem;
+  width: 55%;
+  height: 2.5rem;
+  transform: translateX(-50%);
+  background: radial-gradient(ellipse at center, var(--color-pulse) 0%, transparent 70%);
+  filter: blur(24px);
+  opacity: 0.45;
+  transition:
+    opacity 0.5s ease-out,
+    transform 0.5s ease-out;
+}
+.group:hover .portrait-ring {
+  opacity: 0.75;
+  transform: translateX(-50%) scaleX(1.12);
 }

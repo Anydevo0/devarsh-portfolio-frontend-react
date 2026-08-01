@@ -32,13 +32,13 @@ export function ChatInput({ disabled, onSend }: ChatInputProps) {
         onChange={(event) => setValue(event.target.value)}
         disabled={disabled}
         placeholder="Message..."
-        className="flex-1 rounded-full border border-line bg-paper px-4 py-2.5 text-sm focus-visible:border-wire focus-visible:outline-none disabled:opacity-50"
+        className="flex-1 rounded-full border border-edge bg-void px-4 py-2.5 text-sm text-mist placeholder:text-fog focus-visible:border-pulse focus-visible:outline-none disabled:opacity-50"
       />
       <button
         type="submit"
         disabled={disabled || !value.trim()}
         aria-label="Send message"
-        className="flex size-10 shrink-0 items-center justify-center rounded-full bg-ink text-paper transition-opacity hover:bg-ink/90 disabled:opacity-40"
+        className="flex size-10 shrink-0 items-center justify-center rounded-full bg-pulse text-void transition-opacity hover:brightness-110 disabled:opacity-40"
       >
         <SendIcon />
       </button>

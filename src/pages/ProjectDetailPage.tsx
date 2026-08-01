@@ -11,7 +11,7 @@ export function ProjectDetailPage() {
   if (isPending) {
     return (
       <main className="mx-auto max-w-3xl px-6 py-16">
-        <p className="font-mono text-sm text-mute">Loading…</p>
+        <p className="font-mono text-sm text-fog">Loading…</p>
       </main>
     )
   }
@@ -19,9 +19,9 @@ export function ProjectDetailPage() {
   if (isError || !project) {
     return (
       <main className="mx-auto max-w-3xl px-6 py-16">
-        <p className="font-mono text-sm text-mute">
+        <p className="font-mono text-sm text-fog">
           Couldn&apos;t find that project.{' '}
-          <Link to="/" className="text-wire underline">
+          <Link to="/" className="text-pulse underline">
             Back to home
           </Link>
         </p>
@@ -31,13 +31,10 @@ export function ProjectDetailPage() {
 
   return (
     <main className="mx-auto max-w-3xl px-6 py-16 sm:py-20">
-      <Link
-        to="/"
-        className="font-mono text-sm text-mute transition-colors hover:text-wire"
-      >
+      <Link to="/" className="font-mono text-sm text-fog transition-colors hover:text-pulse">
         ← Back
       </Link>
-      <h1 className="mt-5 font-display text-4xl font-bold sm:text-5xl">{project.title}</h1>
+      <h1 className="mt-5 font-tech text-4xl font-bold text-mist sm:text-5xl">{project.title}</h1>
       <div className="mt-4">
         <TechTagList tags={project.tech_stack} />
       </div>
@@ -48,13 +45,13 @@ export function ProjectDetailPage() {
               key={url}
               src={url}
               alt={`${project.title} screenshot ${index + 1}`}
-              className="aspect-video w-full rounded-2xl object-cover shadow-sm"
+              className="aspect-video w-full rounded-2xl border border-edge object-cover"
             />
           ))}
         </div>
       )}
       <div className="mt-8">
-        <MarkdownRenderer content={project.description} />
+        <MarkdownRenderer content={project.description} className="prose prose-tech" />
       </div>
       <div className="mt-8 flex gap-4 font-mono text-sm">
         {project.live_demo_url && (
@@ -62,7 +59,7 @@ export function ProjectDetailPage() {
             href={project.live_demo_url}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-wire underline"
+            className="text-pulse underline"
           >
             Live demo
           </a>
@@ -72,7 +69,7 @@ export function ProjectDetailPage() {
             href={project.repo_url}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-wire underline"
+            className="text-pulse underline"
           >
             Source
           </a>

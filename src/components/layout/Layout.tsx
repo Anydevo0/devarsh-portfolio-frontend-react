@@ -7,7 +7,7 @@ import { ChatWidget } from '@/components/chat/ChatWidget'
 
 export function Layout() {
   return (
-    <div className="flex min-h-screen flex-col">
+    <div className="flex min-h-screen flex-col bg-void text-mist">
       <Header />
       <div className="flex-1">
         <Outlet />

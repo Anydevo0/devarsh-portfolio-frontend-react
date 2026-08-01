@@ -8,7 +8,7 @@ interface ChatLogProps {
 export function ChatLog({ turns }: ChatLogProps) {
   if (turns.length === 0) {
     return (
-      <p className="text-sm text-mute">
+      <p className="text-sm text-fog">
         Ask me anything about my work — try &quot;what have you built with FastAPI?&quot;
       </p>
     )
@@ -21,8 +21,8 @@ export function ChatLog({ turns }: ChatLogProps) {
           <div
             className={
               turn.role === 'user'
-                ? 'max-w-[80%] rounded-2xl rounded-br-md bg-ink px-4 py-2.5 text-sm text-paper'
-                : 'max-w-[80%] rounded-2xl rounded-bl-md bg-line/30 px-4 py-2.5 text-sm text-ink'
+                ? 'max-w-[80%] rounded-2xl rounded-br-md bg-pulse px-4 py-2.5 text-sm text-void'
+                : 'max-w-[80%] rounded-2xl rounded-bl-md border border-edge bg-void px-4 py-2.5 text-sm text-mist'
             }
           >
             <span className="whitespace-pre-wrap">

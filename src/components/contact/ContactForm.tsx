@@ -49,7 +49,7 @@ export function ContactForm() {
 
   if (mutation.isSuccess) {
     return (
-      <p className="rounded-2xl border border-line/60 bg-paper p-6 font-mono text-sm text-wire shadow-sm">
+      <p className="rounded-2xl border border-edge bg-panel p-6 font-mono text-sm text-live">
         Message received — I&apos;ll get back to you soon.
       </p>
     )
@@ -60,7 +60,7 @@ export function ContactForm() {
       <HoneypotField value={nickname} onChange={setNickname} />
 
       <div>
-        <label htmlFor="contact-name" className="text-sm font-medium">
+        <label htmlFor="contact-name" className="text-sm font-medium text-mist">
           Name
         </label>
         <input
@@ -70,13 +70,13 @@ export function ContactForm() {
           maxLength={MAX_NAME_LENGTH}
           value={name}
           onChange={(event) => setName(event.target.value)}
-          className="mt-1 w-full rounded-lg border border-line px-3.5 py-2.5 text-sm transition-shadow focus-visible:border-wire focus-visible:ring-4 focus-visible:ring-wire/10 focus-visible:outline-none"
+          className="mt-1 w-full rounded-lg border border-edge bg-panel px-3.5 py-2.5 text-sm text-mist transition-shadow focus-visible:border-pulse focus-visible:ring-4 focus-visible:ring-pulse/10 focus-visible:outline-none"
         />
-        {fieldErrors.name && <p className="mt-1 text-sm text-signal">{fieldErrors.name}</p>}
+        {fieldErrors.name && <p className="mt-1 text-sm text-alert">{fieldErrors.name}</p>}
       </div>
 
       <div>
-        <label htmlFor="contact-email" className="text-sm font-medium">
+        <label htmlFor="contact-email" className="text-sm font-medium text-mist">
           Email
         </label>
         <input
@@ -85,17 +85,17 @@ export function ContactForm() {
           required
           value={email}
           onChange={(event) => setEmail(event.target.value)}
-          className="mt-1 w-full rounded-lg border border-line px-3.5 py-2.5 text-sm transition-shadow focus-visible:border-wire focus-visible:ring-4 focus-visible:ring-wire/10 focus-visible:outline-none"
+          className="mt-1 w-full rounded-lg border border-edge bg-panel px-3.5 py-2.5 text-sm text-mist transition-shadow focus-visible:border-pulse focus-visible:ring-4 focus-visible:ring-pulse/10 focus-visible:outline-none"
         />
-        {fieldErrors.email && <p className="mt-1 text-sm text-signal">{fieldErrors.email}</p>}
+        {fieldErrors.email && <p className="mt-1 text-sm text-alert">{fieldErrors.email}</p>}
       </div>
 
       <div>
         <div className="flex items-baseline justify-between">
-          <label htmlFor="contact-message" className="text-sm font-medium">
+          <label htmlFor="contact-message" className="text-sm font-medium text-mist">
             Message
           </label>
-          <span className="font-mono text-xs text-mute">
+          <span className="font-mono text-xs text-fog">
             {message.length}/{MAX_MESSAGE_LENGTH}
           </span>
         </div>
@@ -106,19 +106,19 @@ export function ContactForm() {
           rows={5}
           value={message}
           onChange={(event) => setMessage(event.target.value)}
-          className="mt-1 w-full rounded-lg border border-line px-3.5 py-2.5 text-sm transition-shadow focus-visible:border-wire focus-visible:ring-4 focus-visible:ring-wire/10 focus-visible:outline-none"
+          className="mt-1 w-full rounded-lg border border-edge bg-panel px-3.5 py-2.5 text-sm text-mist transition-shadow focus-visible:border-pulse focus-visible:ring-4 focus-visible:ring-pulse/10 focus-visible:outline-none"
         />
-        {fieldErrors.message && <p className="mt-1 text-sm text-signal">{fieldErrors.message}</p>}
+        {fieldErrors.message && <p className="mt-1 text-sm text-alert">{fieldErrors.message}</p>}
       </div>
 
       {isRateLimited && (
-        <p className="font-mono text-sm text-signal">
+        <p className="font-mono text-sm text-alert">
           {apiError.message}
           {countdown > 0 ? ` Try again in ${countdown}s.` : ''}
         </p>
       )}
       {isGenericError && apiError && (
-        <p className="font-mono text-sm text-signal">
+        <p className="font-mono text-sm text-alert">
           {apiError.message} You can also reach me directly at{' '}
           <a href={`mailto:${CONTACT_EMAIL}`} className="underline">
             {CONTACT_EMAIL}
@@ -130,7 +130,7 @@ export function ContactForm() {
       <button
         type="submit"
         disabled={mutation.isPending || (isRateLimited && countdown > 0)}
-        className="self-start rounded-full bg-ink px-6 py-2.5 font-mono text-sm text-paper transition-all hover:-translate-y-0.5 hover:bg-ink/90 hover:shadow-md disabled:pointer-events-none disabled:opacity-50"
+        className="self-start rounded-full bg-pulse px-6 py-2.5 font-mono text-sm text-void transition-all hover:-translate-y-0.5 hover:shadow-lg hover:shadow-pulse/20 hover:brightness-110 disabled:pointer-events-none disabled:opacity-50"
       >
         {mutation.isPending ? 'Sending…' : 'Send message'}
       </button>

@@ -7,10 +7,10 @@ interface TechTagListProps {
 export function TechTagList({ tags }: TechTagListProps) {
   if (tags.length === 0) return null
   return (
-    <p className="flex flex-wrap gap-x-1.5 gap-y-1 font-mono text-xs text-mute">
+    <p className="flex flex-wrap gap-x-1.5 gap-y-1 font-mono text-xs text-fog">
       <span>stack:</span>
       {tags.map((tag, index) => (
-        <span key={tag} className="text-ink">
+        <span key={tag} className="text-mist/85">
           {tag}
           {index < tags.length - 1 ? ' ·' : ''}
         </span>

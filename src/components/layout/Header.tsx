@@ -7,33 +7,33 @@ export function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
 
   return (
-    <header className="sticky top-0 z-30 border-b border-line/60 bg-paper/75 backdrop-blur-md">
-      <div className="mx-auto flex w-full max-w-4xl items-center justify-between px-6 py-5">
-        <Link to="/" className="font-display text-lg font-bold">
+    <header className="sticky top-0 z-30 border-b border-edge bg-void/80 backdrop-blur-md">
+      <div className="mx-auto flex w-full max-w-5xl items-center justify-between px-6 py-5">
+        <Link to="/" className="font-tech text-lg font-bold text-mist">
           Devarsh Chhatrala
         </Link>
-        <nav className="hidden gap-6 text-sm sm:flex">
-          <a href="#skills" className="text-mute transition-colors hover:text-wire">
+        <nav className="hidden gap-7 font-mono text-xs tracking-wide uppercase sm:flex">
+          <a href="#skills" className="text-fog transition-colors hover:text-pulse">
             Skills
           </a>
-          <a href="#experience" className="text-mute transition-colors hover:text-wire">
+          <a href="#experience" className="text-fog transition-colors hover:text-pulse">
             Experience
           </a>
-          <a href="#projects" className="text-mute transition-colors hover:text-wire">
+          <a href="#projects" className="text-fog transition-colors hover:text-pulse">
             Work
           </a>
-          <Link to="/blog" className="text-mute transition-colors hover:text-wire">
+          <Link to="/blog" className="text-fog transition-colors hover:text-pulse">
             Writing
           </Link>
           <a
             href={`${API_BASE_URL}/resume`}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-mute transition-colors hover:text-wire"
+            className="text-fog transition-colors hover:text-pulse"
           >
             Resume
           </a>
-          <a href="#contact" className="text-mute transition-colors hover:text-wire">
+          <a href="#contact" className="text-fog transition-colors hover:text-pulse">
             Contact
           </a>
         </nav>
@@ -42,38 +42,38 @@ export function Header() {
           onClick={() => setIsMenuOpen((prev) => !prev)}
           aria-expanded={isMenuOpen}
           aria-label={isMenuOpen ? 'Close menu' : 'Open menu'}
-          className="text-ink sm:hidden"
+          className="text-mist sm:hidden"
         >
           {isMenuOpen ? <CloseIcon /> : <MenuIcon />}
         </button>
       </div>
       {isMenuOpen && (
-        <nav className="flex flex-col gap-1 border-t border-line/60 px-6 py-4 text-sm sm:hidden">
+        <nav className="flex flex-col gap-1 border-t border-edge px-6 py-4 font-mono text-xs tracking-wide uppercase sm:hidden">
           <a
             href="#skills"
             onClick={() => setIsMenuOpen(false)}
-            className="rounded-lg px-2 py-2.5 text-mute hover:bg-line/20 hover:text-wire"
+            className="rounded-lg px-2 py-2.5 text-fog hover:bg-panel hover:text-pulse"
           >
             Skills
           </a>
           <a
             href="#experience"
             onClick={() => setIsMenuOpen(false)}
-            className="rounded-lg px-2 py-2.5 text-mute hover:bg-line/20 hover:text-wire"
+            className="rounded-lg px-2 py-2.5 text-fog hover:bg-panel hover:text-pulse"
           >
             Experience
           </a>
           <a
             href="#projects"
             onClick={() => setIsMenuOpen(false)}
-            className="rounded-lg px-2 py-2.5 text-mute hover:bg-line/20 hover:text-wire"
+            className="rounded-lg px-2 py-2.5 text-fog hover:bg-panel hover:text-pulse"
           >
             Work
           </a>
           <Link
             to="/blog"
             onClick={() => setIsMenuOpen(false)}
-            className="rounded-lg px-2 py-2.5 text-mute hover:bg-line/20 hover:text-wire"
+            className="rounded-lg px-2 py-2.5 text-fog hover:bg-panel hover:text-pulse"
           >
             Writing
           </Link>
@@ -82,14 +82,14 @@ export function Header() {
             target="_blank"
             rel="noopener noreferrer"
             onClick={() => setIsMenuOpen(false)}
-            className="rounded-lg px-2 py-2.5 text-mute hover:bg-line/20 hover:text-wire"
+            className="rounded-lg px-2 py-2.5 text-fog hover:bg-panel hover:text-pulse"
           >
             Resume
           </a>
           <a
             href="#contact"
             onClick={() => setIsMenuOpen(false)}
-            className="rounded-lg px-2 py-2.5 text-mute hover:bg-line/20 hover:text-wire"
+            className="rounded-lg px-2 py-2.5 text-fog hover:bg-panel hover:text-pulse"
           >
             Contact
           </a>

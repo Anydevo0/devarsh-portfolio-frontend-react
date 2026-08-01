@@ -1,33 +1,41 @@
-const HIGHLIGHTS = [
-  {
-    title: 'Backend architecture',
-    text: 'I build scalable backend services with Python, FastAPI, and DRF, designing clean APIs, maintainable service layers, and efficient data flows for complex applications.',
-  },
-  {
-    title: 'AI-powered systems',
-    text: 'I develop intelligent applications using LLM workflows, RAG pipelines, and AI integrations, Custom MCPs that transform business processes into smarter user experiences.',
-  },
-  {
-    title: 'Production engineering',
-    text: 'I focus on building reliable systems with cloud infrastructure, background processing, observability, and scalable data architectures that perform in real-world environments.',
-  },
-]
+import { useSiteContent } from '@/lib/siteContent/useSiteContent'
 
 export function ManifestBand() {
+  const { focus } = useSiteContent()
+
   return (
-    <section className="bg-ink px-6 py-10 sm:py-12">
-      <div className="mx-auto max-w-4xl rounded-3xl border border-line-on-ink/60 bg-ink/80 p-6 shadow-sm sm:p-8">
-        <p className="mb-4 font-mono text-xs tracking-wider text-mute-on-ink uppercase">
-          // backend + ai focus
+    <section className="border-edge bg-void border-t px-6 py-16 sm:py-20">
+      <div className="mx-auto max-w-5xl">
+        {focus.eyebrow && (
+          <p className="text-pulse mb-5 font-mono text-xs font-medium tracking-[0.15em] uppercase">
+            {focus.eyebrow}
+          </p>
+        )}
+        <p className="text-mist max-w-3xl text-lg leading-8 sm:text-xl sm:leading-9">
+          {focus.intro}
         </p>
-        <p className="max-w-3xl text-base leading-7 text-paper/85 sm:text-lg">
-          I build software systems that are designed for real-world complexity — combining reliable backend engineering with practical AI solutions to create scalable, production-ready applications.
-        </p>
-        <ul className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-3">
-          {HIGHLIGHTS.map((highlight) => (
-            <li key={highlight.title} className="rounded-2xl border border-line-on-ink/60 bg-paper/5 p-4">
-              <h3 className="font-mono text-xs tracking-wider text-signal uppercase">{highlight.title}</h3>
-              <p className="mt-2 text-sm leading-6 text-paper/80">{highlight.text}</p>
+        <ul className="mt-10 grid grid-cols-1 gap-5 sm:grid-cols-3">
+          {focus.highlights.map((highlight) => (
+            <li
+              key={highlight.title}
+              className="group border-edge bg-panel/60 hover:border-pulse/40 hover:shadow-pulse/5 rounded-2xl border p-6 transition-all hover:-translate-y-1 hover:shadow-xl"
+            >
+              <h3 className="text-pulse font-mono text-xs font-semibold tracking-wider uppercase">
+                {highlight.title}
+              </h3>
+              <p className="text-fog mt-3 text-sm leading-6">{highlight.text}</p>
+              {highlight.tags.length > 0 && (
+                <ul className="mt-4 flex flex-wrap gap-1.5">
+                  {highlight.tags.map((tag) => (
+                    <li
+                      key={tag}
+                      className="border-edge bg-void/60 text-fog/90 rounded-full border px-2.5 py-1 font-mono text-[0.6875rem]"
+                    >
+                      {tag}
+                    </li>
+                  ))}
+                </ul>
+              )}
             </li>
           ))}
         </ul>

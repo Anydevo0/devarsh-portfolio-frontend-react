@@ -48,11 +48,12 @@ const SKILL_CATEGORIES = [
 
 export function SkillsSection() {
   return (
-    <section id="skills" className="mx-auto max-w-4xl px-6 py-20 sm:py-24">
-      <h2 className="font-display text-3xl font-bold sm:text-4xl">Skills</h2>
-      <p className="mt-4 max-w-3xl text-base text-ink/70 sm:text-lg">
-        Backend-focused engineer building API-driven systems with Python, FastAPI, Django, PostgreSQL,
-        AWS, Docker, Celery, Redis, and automation tools for scraping, observability, and async work.
+    <section id="skills" className="mx-auto max-w-5xl px-6 py-20 sm:py-24">
+      <h2 className="font-tech text-3xl font-bold text-mist sm:text-4xl">Skills</h2>
+      <p className="mt-4 max-w-3xl text-base text-fog sm:text-lg">
+        Backend-focused engineer building API-driven systems with Python, FastAPI, Django,
+        PostgreSQL, AWS, Docker, Celery, Redis, and automation tools for scraping, observability,
+        and async work.
       </p>
       <div className="mt-10 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {SKILL_CATEGORIES.map((category) => (

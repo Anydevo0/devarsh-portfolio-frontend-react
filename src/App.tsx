@@ -8,6 +8,7 @@ import { ChatConversationDetailPage } from '@/admin/pages/ChatConversationDetail
 import { ChatListPage } from '@/admin/pages/ChatListPage'
 import { ContactDetailPage } from '@/admin/pages/ContactDetailPage'
 import { ContactListPage } from '@/admin/pages/ContactListPage'
+import { ContentEditorPage } from '@/admin/pages/ContentEditorPage'
 import { LoginPage } from '@/admin/pages/LoginPage'
 import { ProjectFormPage } from '@/admin/pages/ProjectFormPage'
 import { ProjectListPage } from '@/admin/pages/ProjectListPage'
@@ -32,6 +33,7 @@ function App() {
             <Route element={<ProtectedRoute />}>
               <Route element={<AdminLayout />}>
                 <Route path="/admin" element={<AdminHomePage />} />
+                <Route path="/admin/content" element={<ContentEditorPage />} />
                 <Route path="/admin/projects" element={<ProjectListPage />} />
                 <Route path="/admin/projects/new" element={<ProjectFormPage />} />
                 <Route path="/admin/projects/:id/edit" element={<ProjectFormPage />} />

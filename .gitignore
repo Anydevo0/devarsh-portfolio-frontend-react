@@ -30,3 +30,11 @@ coverage
 *.sln
 *.sw?
 .gh-pages-cache
+
+# claude
+CLAUDE.md
+claude.lock.bak
+.claude.lock.bak
+.claude.lock
+.claude/
+

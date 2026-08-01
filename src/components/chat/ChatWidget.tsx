@@ -29,18 +29,18 @@ export function ChatWidget() {
         <div
           role="dialog"
           aria-label="Chat with the assistant"
-          className="flex h-[34rem] max-h-[calc(100vh-8rem)] w-[calc(100vw-3rem)] flex-col overflow-hidden rounded-3xl bg-paper shadow-2xl sm:w-96"
+          className="flex h-[34rem] max-h-[calc(100vh-8rem)] w-[calc(100vw-3rem)] flex-col overflow-hidden rounded-3xl border border-edge bg-panel shadow-2xl sm:w-96"
         >
-          <div className="flex items-center justify-between bg-ink px-5 py-4">
+          <div className="flex items-center justify-between border-b border-edge bg-void px-5 py-4">
             <div>
-              <h2 className="text-sm font-semibold text-paper">Ask about my work</h2>
-              <p className="text-xs text-mute-on-ink">Answers pulled from this site's content</p>
+              <h2 className="text-sm font-semibold text-mist">Ask about my work</h2>
+              <p className="text-xs text-fog">Answers pulled from this site's content</p>
             </div>
             <button
               type="button"
               onClick={() => setIsOpen(false)}
               aria-label="Minimize chat"
-              className="text-mute-on-ink hover:text-paper"
+              className="text-fog hover:text-mist"
             >
               <CloseIcon />
             </button>
@@ -50,13 +50,13 @@ export function ChatWidget() {
             <div ref={logEndRef} />
           </div>
           {status === 'error' && errorMessage && (
-            <p role="alert" className="px-4 pb-2 text-sm text-signal">
+            <p role="alert" className="px-4 pb-2 text-sm text-alert">
               {errorMessage}
             </p>
           )}
-          <div className="border-t border-line px-4 py-3">
+          <div className="border-t border-edge px-4 py-3">
             <ChatInput disabled={status === 'streaming'} onSend={send} />
-            <p className="mt-2 text-center text-xs text-mute">
+            <p className="mt-2 text-center text-xs text-fog">
               Conversations may be logged to prevent abuse.
             </p>
           </div>
@@ -67,7 +67,7 @@ export function ChatWidget() {
         onClick={() => setIsOpen((prev) => !prev)}
         aria-expanded={isOpen}
         aria-label={isOpen ? 'Close chat' : 'Open chat'}
-        className="flex size-14 items-center justify-center rounded-full bg-ink text-paper shadow-lg transition-transform hover:scale-105 hover:bg-ink/90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-wire"
+        className="flex size-14 items-center justify-center rounded-full bg-pulse text-void shadow-lg transition-transform hover:scale-105 hover:brightness-110 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pulse"
       >
         {isOpen ? <CloseIcon /> : <ChatIcon />}
       </button>

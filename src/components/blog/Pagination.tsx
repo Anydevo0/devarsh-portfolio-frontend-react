@@ -20,18 +20,18 @@ export function Pagination({ total, limit, offset, onPageChange }: PaginationPro
         type="button"
         onClick={() => onPageChange(Math.max(0, offset - limit))}
         disabled={offset === 0}
-        className="text-wire underline disabled:text-mute disabled:no-underline"
+        className="text-pulse underline disabled:text-fog disabled:no-underline"
       >
         ← Previous
       </button>
-      <span className="text-mute">
+      <span className="text-fog">
         Page {currentPage} of {totalPages}
       </span>
       <button
         type="button"
         onClick={() => onPageChange(offset + limit)}
         disabled={currentPage >= totalPages}
-        className="text-wire underline disabled:text-mute disabled:no-underline"
+        className="text-pulse underline disabled:text-fog disabled:no-underline"
       >
         Next →
       </button>

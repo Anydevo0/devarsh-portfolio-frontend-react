@@ -42,28 +42,28 @@ export function BlogListPage() {
 
   return (
     <main className="mx-auto max-w-3xl px-6 py-16 sm:py-20">
-      <h1 className="font-display text-4xl font-bold sm:text-5xl">Writing</h1>
+      <h1 className="font-tech text-4xl font-bold text-mist sm:text-5xl">Writing</h1>
 
       <form onSubmit={applyFilters} className="mt-8 flex flex-wrap items-center gap-3">
         <BlogSearchBar value={qInput} onChange={setQInput} />
         <TagFilter value={tagInput} onChange={setTagInput} />
         <button
           type="submit"
-          className="rounded-full border border-line px-4 py-2 font-mono text-sm transition-colors hover:border-wire hover:text-wire"
+          className="rounded-full border border-edge px-4 py-2 font-mono text-sm text-mist transition-colors hover:border-pulse hover:text-pulse"
         >
           Search
         </button>
       </form>
 
       <div className="mt-8 flex flex-col gap-4">
-        {isPending && <p className="font-mono text-sm text-mute">Loading…</p>}
+        {isPending && <p className="font-mono text-sm text-fog">Loading…</p>}
         {isError && (
-          <p className="font-mono text-sm text-mute">
+          <p className="font-mono text-sm text-fog">
             Couldn&apos;t load posts right now — please try again shortly.
           </p>
         )}
         {data && data.items.length === 0 && (
-          <p className="font-mono text-sm text-mute">// no posts match yet.</p>
+          <p className="font-mono text-sm text-fog">// no posts match yet.</p>
         )}
         {data?.items.map((post) => <BlogCard key={post.id} post={post} />)}
       </div>

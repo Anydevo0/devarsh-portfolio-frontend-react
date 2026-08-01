@@ -6,23 +6,19 @@ export function ProjectGrid() {
   const { data, isPending, isError } = useProjects()
 
   if (isPending) {
-    return <p className="font-mono text-sm text-mute">Loading projects…</p>
+    return <p className="font-mono text-sm text-fog">Loading projects…</p>
   }
 
   if (isError) {
     return (
-      <p className="font-mono text-sm text-mute">
+      <p className="font-mono text-sm text-fog">
         Couldn&apos;t load projects right now — please try again shortly.
       </p>
     )
   }
 
   if (data.items.length === 0) {
-    return (
-      <p className="font-mono text-sm text-mute">
-        // no published projects yet — check back soon.
-      </p>
-    )
+    return <p className="font-mono text-sm text-fog">// no published projects yet — check back soon.</p>
   }
 
   return (

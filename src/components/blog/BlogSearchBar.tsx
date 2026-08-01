@@ -17,7 +17,7 @@ export function BlogSearchBar({ value, onChange }: BlogSearchBarProps) {
         value={value}
         onChange={(event) => onChange(event.target.value)}
         placeholder="Search posts…"
-        className="w-full rounded border border-line px-3 py-2 text-sm focus-visible:border-wire focus-visible:outline-none"
+        className="w-full rounded border border-edge bg-panel px-3 py-2 text-sm text-mist placeholder:text-fog focus-visible:border-pulse focus-visible:outline-none"
       />
     </div>
   )

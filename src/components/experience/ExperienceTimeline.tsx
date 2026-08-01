@@ -19,8 +19,8 @@ const EXPERIENCE = [
 
 export function ExperienceTimeline() {
   return (
-    <section id="experience" className="mx-auto max-w-4xl px-6 py-20 sm:py-24">
-      <h2 className="font-display text-3xl font-bold sm:text-4xl">Experience</h2>
+    <section id="experience" className="mx-auto max-w-5xl px-6 py-20 sm:py-24">
+      <h2 className="font-tech text-3xl font-bold text-mist sm:text-4xl">Experience</h2>
       <div className="mt-10 flex flex-col gap-8">
         {EXPERIENCE.map((item, index) => (
           <TimelineItem
