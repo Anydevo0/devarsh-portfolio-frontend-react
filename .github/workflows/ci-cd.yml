@@ -1,0 +1,52 @@
+name: CI/CD
+
+# Same trigger shape as the backend: PRs targeting master get checked before merge,
+# and master itself gets checked again on every push (a merged PR lands as exactly
+# that kind of push, so it's covered without a separate "on merge" trigger).
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm run test
+      - run: npm run build
+
+  deploy:
+    # Only for real pushes to master, never for PRs — a PR from a fork shouldn't be
+    # able to publish to Pages, and there's nothing to deploy yet on an unmerged branch.
+    if: github.ref == 'refs/heads/master' && github.event_name == 'push'
+    needs: ci
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # so actions-gh-pages can push the gh-pages branch below
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+      - run: npm run build # .env.production is committed, so this needs no secrets
+
+      - name: Publish dist/ to the gh-pages branch
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./dist
