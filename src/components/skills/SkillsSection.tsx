@@ -1,23 +1,22 @@
 import { SkillCategory } from './SkillCategory'
 
+import { Reveal } from '@/components/common/Reveal'
+import { Section } from '@/components/layout/Section'
+
 const SKILL_CATEGORIES = [
   {
     title: 'Languages',
+    accent: 'bg-pulse',
     skills: ['Python', 'JavaScript', 'C++', 'Java', 'SQL'],
   },
   {
     title: 'Backend',
-    skills: [
-      'FastAPI',
-      'Django REST Framework',
-      'Flask',
-      'REST APIs',
-      'GraphQL',
-      'Node.js',
-    ],
+    accent: 'bg-beam',
+    skills: ['FastAPI', 'Django REST Framework', 'Flask', 'REST APIs', 'GraphQL', 'Node.js'],
   },
   {
     title: 'Cloud & Infrastructure',
+    accent: 'bg-halo',
     skills: [
       'AWS',
       'EC2',
@@ -33,6 +32,7 @@ const SKILL_CATEGORIES = [
   },
   {
     title: 'Tools & Data',
+    accent: 'bg-live',
     skills: [
       'PostgreSQL',
       'MongoDB',
@@ -48,18 +48,26 @@ const SKILL_CATEGORIES = [
 
 export function SkillsSection() {
   return (
-    <section id="skills" className="mx-auto max-w-5xl px-6 py-20 sm:py-24">
-      <h2 className="font-tech text-3xl font-bold text-mist sm:text-4xl">Skills</h2>
-      <p className="mt-4 max-w-3xl text-base text-fog sm:text-lg">
-        Backend-focused engineer building API-driven systems with Python, FastAPI, Django,
-        PostgreSQL, AWS, Docker, Celery, Redis, and automation tools for scraping, observability,
-        and async work.
-      </p>
-      <div className="mt-10 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {SKILL_CATEGORIES.map((category) => (
-          <SkillCategory key={category.title} title={category.title} skills={category.skills} />
-        ))}
-      </div>
-    </section>
+    <Section
+      id="skills"
+      route="GET /skills"
+      title="The stack I work in"
+      lede="API-driven systems in Python and FastAPI, deployed on AWS with Docker, Celery and Redis — plus the automation tooling that keeps scraping, observability and async work running."
+    >
+      <Reveal>
+        {/* A 1px grid gap over an edge-coloured surface draws every divider at once,
+            so no cell carries its own border and adjacent rules never double up. */}
+        <div className="bg-edge/70 grid grid-cols-1 gap-px overflow-hidden rounded-3xl sm:grid-cols-2">
+          {SKILL_CATEGORIES.map((category) => (
+            <SkillCategory
+              key={category.title}
+              title={category.title}
+              skills={category.skills}
+              accent={category.accent}
+            />
+          ))}
+        </div>
+      </Reveal>
+    </Section>
   )
 }

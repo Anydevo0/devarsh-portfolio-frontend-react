@@ -2,39 +2,261 @@
 @plugin '@tailwindcss/typography';
 
 @theme {
+  /* Admin palette — deliberately untouched by the public-site redesign. The admin
+     panel is a tool, not a showpiece; it keeps its own light, high-contrast tokens. */
   --color-ink: #14171f;
   --color-paper: #f1f2ee;
   --color-signal: #c9791f;
   --color-wire: #33625a;
   --color-line: #cac8bd;
   --color-mute: #5b5d57;
-  /* Derived, not new hues in the palette — contextual variants of line/mute for use
-     on the one dark `ink` band, where the light-mode values wouldn't have contrast. */
   --color-line-on-ink: #333949;
   --color-mute-on-ink: #9aa0ad;
 
-  /* Public-site ("brand") palette — cool/dark, systems-engineering themed. Scoped to
-     the public marketing pages only (Layout tree); the admin panel deliberately keeps
-     the tokens above untouched rather than being repointed to this palette. */
-  --color-void: #0a0e14;
-  --color-panel: #121a24;
-  --color-mist: #e7ebf3;
-  --color-fog: #8b93a6;
+  /* Public-site palette. Four graded depths from near-black to the border tint,
+     so elevation is expressed by surface value rather than by drop shadows. */
+  --color-void: #05070b;
+  --color-abyss: #0b1220;
+  --color-panel: #111827;
+  --color-edge: #1e293b;
+
+  --color-mist: #e8edf7;
+  --color-fog: #8a94ab;
+
+  /* Three accents on one cool axis: blue carries actions, cyan carries emphasis,
+     violet carries atmosphere. Green and red are reserved for state, never decoration. */
   --color-pulse: #5b7fff;
-  --color-edge: #1e2733;
+  --color-beam: #22d3ee;
+  --color-halo: #8b5cf6;
   --color-live: #3ddc97;
   --color-alert: #ff6b6b;
 
   --font-display: 'Fraunces Variable', ui-serif, Georgia, serif;
   --font-sans: 'Work Sans Variable', ui-sans-serif, system-ui, sans-serif;
   --font-mono: 'JetBrains Mono Variable', ui-monospace, 'SFMono-Regular', monospace;
-  /* Display face for the public site only — see --color-void note above. */
   --font-tech: 'Space Grotesk Variable', ui-sans-serif, system-ui, sans-serif;
+
+  /* Fluid display sizes — the hero and section headings scale continuously between
+     breakpoints instead of stepping, so the type never looks stranded mid-viewport. */
+  --text-hero: clamp(2.6rem, 6.2vw, 5rem);
+  --text-hero--line-height: 1.02;
+  --text-section: clamp(1.9rem, 3.6vw, 3rem);
+  --text-section--line-height: 1.08;
+  --text-lede: clamp(1.05rem, 1.35vw, 1.3rem);
+  --text-lede--line-height: 1.65;
+}
+
+html {
+  scroll-behavior: smooth;
+  /* The sticky header would otherwise cover the top of any #anchor target. */
+  scroll-padding-top: 6rem;
 }
 
 body {
   background-color: var(--color-paper);
   color: var(--color-ink);
+}
+
+/* Scoped to the public shell (see Layout.tsx) so the admin panel keeps browser
+   defaults — dark scrollbars on a light page would be wrong there. */
+.site-shell {
+  scrollbar-color: var(--color-edge) transparent;
+}
+.site-shell ::selection {
+  background: color-mix(in oklab, var(--color-pulse) 45%, transparent);
+  color: var(--color-mist);
+}
+
+/* One focus treatment for the whole public site — a pulse ring offset from the
+   element, visible against every surface value in the palette. */
+.site-shell :focus-visible {
+  outline: 2px solid var(--color-pulse);
+  outline-offset: 3px;
+  border-radius: 0.375rem;
+}
+
+/* ---------------------------------------------------------------------------
+   Surfaces
+   Glass is the site's only card treatment: a near-transparent fill over blur,
+   a hairline border, and an inset top highlight that reads as a lit edge. The
+   3D scene and ambient gradients show through it, which is what ties the page
+   layers together — a solid card would sit on top of the scene instead.
+   --------------------------------------------------------------------------- */
+.glass {
+  background: linear-gradient(
+    180deg,
+    color-mix(in oklab, var(--color-panel) 70%, transparent),
+    color-mix(in oklab, var(--color-abyss) 72%, transparent)
+  );
+  backdrop-filter: blur(16px) saturate(135%);
+  -webkit-backdrop-filter: blur(16px) saturate(135%);
+  border: 1px solid color-mix(in oklab, var(--color-mist) 8%, transparent);
+  box-shadow:
+    inset 0 1px 0 color-mix(in oklab, var(--color-mist) 7%, transparent),
+    0 24px 48px -32px rgb(0 0 0 / 0.9);
+}
+
+.glass-soft {
+  background: color-mix(in oklab, var(--color-panel) 45%, transparent);
+  backdrop-filter: blur(12px) saturate(125%);
+  -webkit-backdrop-filter: blur(12px) saturate(125%);
+  border: 1px solid color-mix(in oklab, var(--color-mist) 6%, transparent);
+}
+
+/* For surfaces that float over arbitrary page content rather than over the page
+   background — currently just the chat panel.
+   `.glass` is not safe here: backdrop-filter samples the backdrop behind the
+   element, and an animated ancestor with a transform establishes a new stacking
+   context that can neutralise the blur entirely. When that happens the panel is
+   merely 70% translucent and whatever the visitor scrolled to reads straight
+   through the conversation. This keeps the glass edge and shadow but makes the fill
+   effectively opaque, so legibility never depends on a compositor behaviour. */
+.glass-panel {
+  background: linear-gradient(180deg, #141c2b, #0a111d);
+  border: 1px solid color-mix(in oklab, var(--color-mist) 9%, transparent);
+  box-shadow:
+    inset 0 1px 0 color-mix(in oklab, var(--color-mist) 8%, transparent),
+    0 32px 64px -28px rgb(0 0 0 / 0.95);
+}
+
+/* A one-pixel rule that fades out at both ends — used as a section divider so the
+   page reads as continuous space rather than stacked boxes. */
+.hairline {
+  height: 1px;
+  border: 0;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    color-mix(in oklab, var(--color-mist) 12%, transparent) 20%,
+    color-mix(in oklab, var(--color-mist) 12%, transparent) 80%,
+    transparent
+  );
+}
+
+/* ---------------------------------------------------------------------------
+   Hero scrims
+   The 3D canvas spans the whole hero; these gradients guarantee the text column
+   wins regardless of what the scene is doing behind it. Two axes: a horizontal
+   wash that darkens the left half, and a vertical one that seats the scene into
+   the section below it.
+   --------------------------------------------------------------------------- */
+.scrim-x {
+  background: linear-gradient(
+    100deg,
+    var(--color-void) 0%,
+    color-mix(in oklab, var(--color-void) 92%, transparent) 30%,
+    color-mix(in oklab, var(--color-void) 55%, transparent) 52%,
+    transparent 72%
+  );
+}
+@media (max-width: 1023px) {
+  /* Stacked layout: there is no clear column for the text, so the scene sits directly
+     behind it and the wash goes vertical — and heavier than the desktop one, since
+     body copy has to stay legible over the monitor's own bright content. */
+  .scrim-x {
+    background: linear-gradient(
+      180deg,
+      var(--color-void) 0%,
+      color-mix(in oklab, var(--color-void) 88%, transparent) 45%,
+      color-mix(in oklab, var(--color-void) 94%, transparent) 100%
+    );
+  }
+}
+.scrim-y {
+  background: linear-gradient(
+    180deg,
+    color-mix(in oklab, var(--color-void) 70%, transparent) 0%,
+    transparent 18%,
+    transparent 72%,
+    var(--color-void) 100%
+  );
+}
+
+/* Ambient colour behind the page — two slow, very large blurred pools. Pure CSS so
+   it costs nothing per frame; the drift animation is class-gated on reduced motion. */
+.aurora {
+  position: absolute;
+  border-radius: 9999px;
+  filter: blur(100px);
+  will-change: transform;
+}
+.aurora--pulse {
+  top: -18%;
+  left: -10%;
+  width: 32rem;
+  height: 32rem;
+  background: radial-gradient(circle, var(--color-pulse) 0%, transparent 68%);
+  opacity: 0.26;
+}
+.aurora--halo {
+  right: -12%;
+  bottom: -22%;
+  width: 36rem;
+  height: 36rem;
+  background: radial-gradient(circle, var(--color-halo) 0%, transparent 66%);
+  opacity: 0.2;
+}
+@keyframes drift-one {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  50% {
+    transform: translate3d(34px, 22px, 0) scale(1.08);
+  }
+}
+@keyframes drift-two {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  50% {
+    transform: translate3d(-28px, -18px, 0) scale(1.06);
+  }
+}
+.animate-drift-one {
+  animation: drift-one 20s ease-in-out infinite;
+}
+.animate-drift-two {
+  animation: drift-two 26s ease-in-out infinite;
+}
+
+/* A faint film of noise over the whole public shell. Large flat gradient fields
+   band on 8-bit displays; the grain breaks the banding and keeps the darks matte
+   rather than plasticky. Inline SVG, so no image request. */
+.grain::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  opacity: 0.032;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* ---------------------------------------------------------------------------
+   Type treatments
+   --------------------------------------------------------------------------- */
+
+/* Headline gradient — top-lit, as if the display type is catching the same light
+   as the 3D scene. Kept to headings only; body copy stays solid for legibility. */
+.text-lit {
+  background: linear-gradient(
+    170deg,
+    var(--color-mist) 0%,
+    var(--color-mist) 45%,
+    color-mix(in oklab, var(--color-mist) 62%, var(--color-pulse)) 100%
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.text-accent-gradient {
+  background: linear-gradient(100deg, var(--color-pulse), var(--color-beam));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
 }
 
 /* Tailwind Typography, tuned to the design tokens rather than left at its generic
@@ -59,15 +281,15 @@ body {
    `className="prose prose-tech"`) to swap in the brand tokens without touching the
    base .prose rule the admin editor's live preview also relies on. */
 .prose-tech {
-  --tw-prose-body: var(--color-mist);
+  --tw-prose-body: color-mix(in oklab, var(--color-mist) 82%, transparent);
   --tw-prose-headings: var(--color-mist);
-  --tw-prose-links: var(--color-pulse);
+  --tw-prose-links: var(--color-beam);
   --tw-prose-bold: var(--color-mist);
-  --tw-prose-code: var(--color-mist);
+  --tw-prose-code: var(--color-beam);
   --tw-prose-quotes: var(--color-fog);
-  --tw-prose-quote-borders: var(--color-edge);
+  --tw-prose-quote-borders: var(--color-pulse);
   --tw-prose-hr: var(--color-edge);
-  --tw-prose-bullets: var(--color-fog);
+  --tw-prose-bullets: var(--color-pulse);
   --tw-prose-counters: var(--color-fog);
   --tw-prose-captions: var(--color-fog);
   --tw-prose-th-borders: var(--color-edge);
@@ -75,8 +297,22 @@ body {
 }
 .prose-tech :where(h1, h2, h3, h4) {
   font-family: var(--font-tech);
+  letter-spacing: -0.02em;
+}
+.prose-tech :where(pre) {
+  background: color-mix(in oklab, var(--color-abyss) 90%, transparent);
+  border: 1px solid var(--color-edge);
+}
+.prose-tech :where(code)::before,
+.prose-tech :where(code)::after {
+  content: '';
 }
 
+/* ---------------------------------------------------------------------------
+   Motion
+   Every animation below is additionally class-gated at the component level via
+   usePrefersReducedMotion — this block is the backstop, not the only guard.
+   --------------------------------------------------------------------------- */
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -86,15 +322,15 @@ body {
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
   }
+  html {
+    scroll-behavior: auto;
+  }
 }
 
-/* Hero's staggered load-in — applied conditionally via usePrefersReducedMotion, not
-   just left to the global reduced-motion override above (belt and suspenders: the
-   class is never added at all when the visitor prefers reduced motion). */
 @keyframes rise {
   from {
     opacity: 0;
-    transform: translateY(10px);
+    transform: translateY(14px);
   }
   to {
     opacity: 1;
@@ -102,144 +338,131 @@ body {
   }
 }
 .animate-rise {
-  animation: rise 0.6s ease-out both;
+  animation: rise 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
 /* Section-level scroll reveal (via the <Reveal> wrapper + useInView) — fades and
    rises into place once, the first time a section enters the viewport. */
 .reveal {
   opacity: 0;
-  transform: translateY(20px);
+  transform: translateY(24px);
   transition:
-    opacity 0.7s ease-out,
-    transform 0.7s ease-out;
+    opacity 0.8s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.8s cubic-bezier(0.22, 1, 0.36, 1);
 }
 .reveal-visible {
   opacity: 1;
   transform: translateY(0);
 }
 
-/* The hero's "available" status dot — a slow breathing pulse, not a blink. Governed
-   by the same global prefers-reduced-motion override above. */
+/* The "available" status dot — a slow breathing pulse, not a blink. */
 @keyframes live-pulse {
   0%,
   100% {
     opacity: 1;
+    box-shadow: 0 0 0 0 color-mix(in oklab, var(--color-live) 55%, transparent);
   }
   50% {
-    opacity: 0.35;
+    opacity: 0.45;
+    box-shadow: 0 0 0 5px color-mix(in oklab, var(--color-live) 0%, transparent);
   }
 }
 .animate-live-pulse {
-  animation: live-pulse 2.4s ease-in-out infinite;
+  animation: live-pulse 2.6s ease-in-out infinite;
 }
 
-/* Hero background glow — two large, blurred, slow-drifting gradient blobs behind the
-   node graph. Pure CSS (no extra JS/canvas work) so it stays cheap; classes are only
-   applied when motion is allowed (see Hero.tsx), same belt-and-suspenders pattern as
-   the other animate- classes above. */
-.hero-glow {
+/* A single band of light travelling across a card on hover. Driven by a moving
+   background-position rather than a transformed pseudo-element so it composites
+   on the GPU and never triggers layout. */
+.sheen {
+  position: relative;
+  overflow: hidden;
+}
+.sheen::before {
+  content: '';
   position: absolute;
-  border-radius: 9999px;
-  filter: blur(90px);
+  inset: 0;
+  pointer-events: none;
+  opacity: 0;
+  background: linear-gradient(
+    105deg,
+    transparent 38%,
+    color-mix(in oklab, var(--color-mist) 9%, transparent) 48%,
+    transparent 58%
+  );
+  background-size: 260% 100%;
+  background-position: 100% 0;
+  transition: opacity 0.35s ease-out;
 }
-.hero-glow--one {
-  top: -12%;
-  left: -8%;
-  width: 26rem;
-  height: 26rem;
-  background: radial-gradient(circle, var(--color-pulse) 0%, transparent 70%);
-  opacity: 0.32;
+.sheen:hover::before,
+.sheen:focus-within::before {
+  opacity: 1;
+  animation: sheen-sweep 1.1s cubic-bezier(0.22, 1, 0.36, 1);
 }
-.hero-glow--two {
-  right: -10%;
-  bottom: -18%;
-  width: 30rem;
-  height: 30rem;
-  background: radial-gradient(circle, var(--color-live) 0%, transparent 70%);
-  opacity: 0.22;
+@keyframes sheen-sweep {
+  from {
+    background-position: 100% 0;
+  }
+  to {
+    background-position: 0 0;
+  }
 }
-@keyframes drift-one {
+
+/* Skeleton placeholders. A travelling highlight rather than a pulsing opacity, so a
+   loading grid reads as one surface being filled instead of several blocks blinking
+   out of sync with each other. */
+@keyframes shimmer {
+  from {
+    background-position: 200% 0;
+  }
+  to {
+    background-position: -200% 0;
+  }
+}
+.shimmer {
+  background-image: linear-gradient(
+    90deg,
+    transparent 20%,
+    color-mix(in oklab, var(--color-mist) 7%, transparent) 50%,
+    transparent 80%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.6s linear infinite;
+}
+
+/* Chat "assistant is thinking" indicator — three dots on a staggered bounce. */
+@keyframes typing-dot {
   0%,
+  60%,
   100% {
-    transform: translate(0, 0) scale(1);
+    transform: translateY(0);
+    opacity: 0.35;
   }
-  50% {
-    transform: translate(30px, 20px) scale(1.08);
+  30% {
+    transform: translateY(-4px);
+    opacity: 1;
   }
 }
-@keyframes drift-two {
+.typing-dot {
+  animation: typing-dot 1.2s ease-in-out infinite;
+}
+
+/* Terminal caret for the hero's mono line. */
+@keyframes caret {
   0%,
+  49% {
+    opacity: 1;
+  }
+  50%,
   100% {
-    transform: translate(0, 0) scale(1);
-  }
-  50% {
-    transform: translate(-25px, -15px) scale(1.05);
+    opacity: 0;
   }
 }
-.animate-drift-one {
-  animation: drift-one 18s ease-in-out infinite;
-}
-.animate-drift-two {
-  animation: drift-two 22s ease-in-out infinite;
+.animate-caret {
+  animation: caret 1.1s step-end infinite;
 }
 
-/* Hero portrait — a bottom-anchored transparent cutout, not a cropped card. Height is
-   driven by --portrait-scale (set inline from the admin-configurable profileImageScale)
-   so the size adjustment works the same way at every breakpoint. */
-.portrait-img {
-  height: calc(13rem * var(--portrait-scale, 1));
-}
-@media (min-width: 640px) {
-  .portrait-img {
-    height: calc(15rem * var(--portrait-scale, 1));
-  }
-}
-@media (min-width: 1024px) {
-  .portrait-img {
-    height: calc(17rem * var(--portrait-scale, 1));
-  }
-}
-@media (min-width: 1280px) {
-  .portrait-img {
-    height: calc(18rem * var(--portrait-scale, 1));
-  }
-}
-
-/* Soft colored aura behind the cutout — ties the portrait into the ambient hero-glow
-   blobs rather than looking like a separate decorated card. Intensifies slightly on
-   hover instead of the old floating animation. */
-.portrait-aura {
-  position: absolute;
-  inset: 8% -20% -6% -20%;
-  background:
-    radial-gradient(ellipse at 50% 70%, var(--color-pulse) 0%, transparent 60%),
-    radial-gradient(ellipse at 62% 38%, var(--color-live) 0%, transparent 55%);
-  filter: blur(60px);
-  opacity: 0.32;
-  transition: opacity 0.5s ease-out;
-}
-.group:hover .portrait-aura {
-  opacity: 0.5;
-}
-
-/* A soft pool of light at the portrait's feet — reinforces the "standing inside the
-   page" read for the bottom-anchored layout. Brightens and widens slightly on hover. */
-.portrait-ring {
-  position: absolute;
-  left: 50%;
-  bottom: -1rem;
-  width: 55%;
-  height: 2.5rem;
-  transform: translateX(-50%);
-  background: radial-gradient(ellipse at center, var(--color-pulse) 0%, transparent 70%);
-  filter: blur(24px);
-  opacity: 0.45;
-  transition:
-    opacity 0.5s ease-out,
-    transform 0.5s ease-out;
-}
-.group:hover .portrait-ring {
-  opacity: 0.75;
-  transform: translateX(-50%) scaleX(1.12);
-}
+/* The hero's portrait treatment lived here. It was removed along with the profile
+   photo — the 3D workstation scene is the hero's subject now, and a second portrait
+   beside it competed with it. The `profileImage*` fields went out of `SiteContent`
+   and out of the admin content editor at the same time, so nothing references it. */

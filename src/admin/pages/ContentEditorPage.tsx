@@ -1,5 +1,5 @@
 import { zodResolver } from '@hookform/resolvers/zod'
-import { type ChangeEvent, useState } from 'react'
+import { useState } from 'react'
 import { Controller, useFieldArray, useForm } from 'react-hook-form'
 import { z } from 'zod'
 
@@ -33,11 +33,6 @@ const contentSchema = z.object({
     headline: z.string().min(1, 'Headline is required.').max(200),
     intro: z.string().min(1, 'Intro paragraph is required.').max(600),
     availability: z.string().max(120),
-    profileImage: z.string().min(1, 'Image path or URL is required.').max(2_000_000),
-    profileImageScale: z.coerce.number().min(0.5, 'Min 0.5×').max(2, 'Max 2×'),
-    profileImageOffsetX: z.coerce.number().min(-200).max(200),
-    profileImageOffsetY: z.coerce.number().min(-200).max(200),
-    profileImageEffects: z.boolean(),
     ctaPrimary: ctaSchema,
     ctaSecondary: ctaSchema,
   }),
@@ -48,11 +43,7 @@ const contentSchema = z.object({
   }),
 })
 
-// react-hook-form's typed useForm needs the pre-coercion ("input") shape for
-// TFieldValues and the post-coercion ("output") shape for the handleSubmit callback —
-// z.coerce.number() on the portrait scale/offset fields means these two differ.
-type ContentFormInput = z.input<typeof contentSchema>
-type ContentFormOutput = z.output<typeof contentSchema>
+type ContentForm = z.infer<typeof contentSchema>
 
 const inputClass =
   'mt-1 w-full rounded border border-line px-3 py-2 text-sm focus-visible:border-wire focus-visible:outline-none'
@@ -63,7 +54,8 @@ export function ContentEditorPage() {
   const content = useSiteContent()
   const [showResetConfirm, setShowResetConfirm] = useState(false)
   const [showExport, setShowExport] = useState(false)
-  const [savedAt, setSavedAt] = useState<number | null>(null)
+  // A flag, not a timestamp — the value was never rendered, only its truthiness.
+  const [isSaved, setIsSaved] = useState(false)
   const [copyStatus, setCopyStatus] = useState<'idle' | 'copied'>('idle')
 
   const {
@@ -71,32 +63,25 @@ export function ContentEditorPage() {
     control,
     handleSubmit,
     reset,
-    setValue,
-    watch,
     formState: { errors, isDirty },
-  } = useForm<ContentFormInput, unknown, ContentFormOutput>({
+  } = useForm<ContentForm>({
     resolver: zodResolver(contentSchema),
     defaultValues: content,
   })
 
   const { fields, append, remove } = useFieldArray({ control, name: 'focus.highlights' })
-  const profileImage = watch('hero.profileImage')
-  const profileImageScale = watch('hero.profileImageScale')
-  const profileImageOffsetX = watch('hero.profileImageOffsetX')
-  const profileImageOffsetY = watch('hero.profileImageOffsetY')
-  const profileImageEffects = watch('hero.profileImageEffects')
 
-  function onSubmit(values: ContentFormOutput) {
+  function onSubmit(values: ContentForm) {
     setContent(values)
     reset(values)
-    setSavedAt(Date.now())
+    setIsSaved(true)
   }
 
   function handleResetConfirmed() {
     resetToDefaults()
     reset(DEFAULT_SITE_CONTENT)
     setShowResetConfirm(false)
-    setSavedAt(null)
+    setIsSaved(false)
   }
 
   async function handleCopyExport() {
@@ -117,19 +102,6 @@ export function ContentEditorPage() {
     anchor.download = 'siteContent.json'
     anchor.click()
     URL.revokeObjectURL(url)
-  }
-
-  function handleImageFile(event: ChangeEvent<HTMLInputElement>) {
-    const file = event.target.files?.[0]
-    if (!file) return
-    const reader = new FileReader()
-    reader.onload = () => {
-      const result = reader.result
-      if (typeof result === 'string') {
-        setValue('hero.profileImage', result, { shouldDirty: true, shouldValidate: true })
-      }
-    }
-    reader.readAsDataURL(file)
   }
 
   return (
@@ -203,103 +175,6 @@ export function ContentEditorPage() {
               placeholder="Leave blank to hide the status dot"
             />
           </div>
-
-          <div>
-            <label htmlFor="hero-image" className={labelClass}>
-              Profile portrait (path or URL — transparent PNG/WebP cutout recommended)
-            </label>
-            <input id="hero-image" {...register('hero.profileImage')} className={inputClass} />
-            <input
-              type="file"
-              accept="image/*"
-              onChange={handleImageFile}
-              className="mt-2 text-sm"
-            />
-            <p className="text-mute mt-1 text-xs">
-              A plain photo will still show its background here — remove it first (e.g. with
-              remove.bg) so only your silhouette is visible. File picker previews instantly but only
-              in this browser (stored as a data URL); for production, host the image and paste its
-              URL/path above instead.
-            </p>
-            {errors.hero?.profileImage && (
-              <p className={errorClass}>{errors.hero.profileImage.message}</p>
-            )}
-          </div>
-
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-            <div>
-              <label htmlFor="hero-image-scale" className={labelClass}>
-                Size (× scale)
-              </label>
-              <input
-                id="hero-image-scale"
-                type="number"
-                step="0.05"
-                {...register('hero.profileImageScale')}
-                className={inputClass}
-              />
-              {errors.hero?.profileImageScale && (
-                <p className={errorClass}>{errors.hero.profileImageScale.message}</p>
-              )}
-            </div>
-            <div>
-              <label htmlFor="hero-image-offset-x" className={labelClass}>
-                Horizontal nudge (px)
-              </label>
-              <input
-                id="hero-image-offset-x"
-                type="number"
-                step="1"
-                {...register('hero.profileImageOffsetX')}
-                className={inputClass}
-              />
-              {errors.hero?.profileImageOffsetX && (
-                <p className={errorClass}>{errors.hero.profileImageOffsetX.message}</p>
-              )}
-            </div>
-            <div>
-              <label htmlFor="hero-image-offset-y" className={labelClass}>
-                Vertical nudge (px)
-              </label>
-              <input
-                id="hero-image-offset-y"
-                type="number"
-                step="1"
-                {...register('hero.profileImageOffsetY')}
-                className={inputClass}
-              />
-              {errors.hero?.profileImageOffsetY && (
-                <p className={errorClass}>{errors.hero.profileImageOffsetY.message}</p>
-              )}
-            </div>
-          </div>
-
-          <label className="flex items-center gap-2 text-sm">
-            <input type="checkbox" {...register('hero.profileImageEffects')} />
-            Glow / aura effects behind the portrait
-          </label>
-
-          {profileImage && (
-            <div className="bg-void relative flex h-56 items-end justify-center overflow-hidden rounded-lg">
-              {profileImageEffects && (
-                <>
-                  <div className="portrait-aura pointer-events-none -z-10" aria-hidden="true" />
-                  <div className="portrait-ring pointer-events-none -z-10" aria-hidden="true" />
-                </>
-              )}
-              <img
-                src={profileImage}
-                alt="Profile preview"
-                className="w-auto max-w-[10rem] object-contain object-bottom"
-                style={{
-                  height: `${12 * Math.min(Number(profileImageScale) || 1, 1.4)}rem`,
-                  transform: `translate3d(${Number(profileImageOffsetX) || 0}px, ${
-                    Number(profileImageOffsetY) || 0
-                  }px, 0)`,
-                }}
-              />
-            </div>
-          )}
 
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div>
@@ -452,7 +327,7 @@ export function ContentEditorPage() {
           >
             {showExport ? 'Hide export' : 'Export'}
           </button>
-          {savedAt && !isDirty && (
+          {isSaved && !isDirty && (
             <span className="text-wire font-mono text-xs">
               Saved — {hasLocalOverrides() ? 'preview updated on this device' : 'reset to defaults'}
             </span>

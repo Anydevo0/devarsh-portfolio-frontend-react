@@ -16,7 +16,7 @@ export function TagFilter({ value, onChange }: TagFilterProps) {
         value={value}
         onChange={(event) => onChange(event.target.value)}
         placeholder="Filter by tag…"
-        className="rounded border border-edge bg-panel px-3 py-2 text-sm text-mist placeholder:text-fog focus-visible:border-pulse focus-visible:outline-none"
+        className="border-edge bg-void/50 text-mist placeholder:text-fog/60 focus-visible:border-pulse rounded-xl border px-4 py-2.5 text-sm transition-colors"
       />
     </div>
   )

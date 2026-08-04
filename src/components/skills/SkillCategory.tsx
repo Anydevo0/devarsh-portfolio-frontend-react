@@ -1,17 +1,28 @@
 interface SkillCategoryProps {
   title: string
   skills: string[]
+  /** Tailwind background class for the accent dot; position in the grid, not a rank. */
+  accent: string
 }
 
-export function SkillCategory({ title, skills }: SkillCategoryProps) {
+/**
+ * One cell of the skills grid. Cells sit on a 1px grid gap over an edge-coloured
+ * background, so the rules between them are the grid's own gaps rather than borders —
+ * which gives this section a spec-sheet feel, distinct from the glass cards used
+ * everywhere else on the page.
+ */
+export function SkillCategory({ title, skills, accent }: SkillCategoryProps) {
   return (
-    <div className="rounded-2xl border border-edge bg-panel p-5 transition-colors duration-200 hover:border-pulse/40 sm:p-6">
-      <h3 className="font-mono text-xs tracking-wider text-pulse uppercase">{title}</h3>
-      <ul className="mt-3 flex flex-wrap gap-2">
+    <div className="bg-abyss/80 p-7 backdrop-blur-sm sm:p-8">
+      <h3 className="text-fog flex items-center gap-2.5 font-mono text-xs tracking-[0.16em] uppercase">
+        <span className={`size-1.5 rounded-full ${accent}`} aria-hidden="true" />
+        {title}
+      </h3>
+      <ul className="mt-5 flex flex-wrap gap-2">
         {skills.map((skill) => (
           <li
             key={skill}
-            className="rounded-full border border-edge px-3 py-1 text-sm text-mist/85 transition-colors hover:border-pulse hover:text-pulse"
+            className="border-edge bg-void/40 text-mist/85 hover:border-pulse/40 hover:text-pulse rounded-lg border px-3 py-1.5 font-mono text-xs transition-colors"
           >
             {skill}
           </li>

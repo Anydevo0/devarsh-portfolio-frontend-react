@@ -13,13 +13,8 @@ export const DEFAULT_SITE_CONTENT: SiteContent = {
     intro:
       'I design and develop production-grade systems using Python, FastAPI, cloud platforms, and modern AI frameworks. My work focuses on scalable APIs, intelligent workflows, and LLM-powered applications.',
     availability: 'Open to new opportunities',
-    profileImage: `${import.meta.env.BASE_URL}devarsh-photo.png`,
-    profileImageScale: 1,
-    profileImageOffsetX: 0,
-    profileImageOffsetY: 0,
-    profileImageEffects: true,
-    ctaPrimary: { label: 'View work', href: '#projects' },
-    ctaSecondary: { label: 'Get in touch', href: '#contact' },
+    ctaPrimary: { label: 'View projects', href: '#projects' },
+    ctaSecondary: { label: 'Contact me', href: '#contact' },
   },
   focus: {
     eyebrow: '// backend + ai focus',

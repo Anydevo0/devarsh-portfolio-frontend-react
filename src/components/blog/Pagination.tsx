@@ -14,13 +14,13 @@ export function Pagination({ total, limit, offset, onPageChange }: PaginationPro
   return (
     <nav
       aria-label="Pagination"
-      className="mt-8 flex items-center justify-between font-mono text-sm"
+      className="mt-10 flex items-center justify-between gap-4 font-mono text-sm"
     >
       <button
         type="button"
         onClick={() => onPageChange(Math.max(0, offset - limit))}
         disabled={offset === 0}
-        className="text-pulse underline disabled:text-fog disabled:no-underline"
+        className="glass-soft text-mist hover:text-pulse rounded-full px-4 py-2 transition-colors disabled:pointer-events-none disabled:opacity-40"
       >
         ← Previous
       </button>
@@ -31,7 +31,7 @@ export function Pagination({ total, limit, offset, onPageChange }: PaginationPro
         type="button"
         onClick={() => onPageChange(offset + limit)}
         disabled={currentPage >= totalPages}
-        className="text-pulse underline disabled:text-fog disabled:no-underline"
+        className="glass-soft text-mist hover:text-pulse rounded-full px-4 py-2 transition-colors disabled:pointer-events-none disabled:opacity-40"
       >
         Next →
       </button>

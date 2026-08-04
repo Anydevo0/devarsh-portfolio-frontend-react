@@ -1,10 +1,14 @@
 import { TimelineItem } from './TimelineItem'
 
+import { Section } from '@/components/layout/Section'
+
+/** Newest first. `isCurrent` drives the live marker; the list order carries the sequence. */
 const EXPERIENCE = [
   {
     company: 'Simform, Ahmedabad, India',
     role: 'Software Engineer',
     dateRange: 'July 2025 — Present',
+    isCurrent: true,
     description:
       'Contributed to a customized ERP solution within a multi-ERP ecosystem for managing semiconductor sample-chip orders and related operational workflows, and other than that worked on improving REST API design, test coverage with pytest and mocks, structured CloudWatch logging, secure AWS S3 upload APIs, and SSE-based streaming for chunked LangGraph responses in an AI powered Fintech application.',
   },
@@ -19,17 +23,24 @@ const EXPERIENCE = [
 
 export function ExperienceTimeline() {
   return (
-    <section id="experience" className="mx-auto max-w-5xl px-6 py-20 sm:py-24">
-      <h2 className="font-tech text-3xl font-bold text-mist sm:text-4xl">Experience</h2>
-      <div className="mt-10 flex flex-col gap-8">
+    <Section
+      id="experience"
+      route="GET /experience"
+      title="Where I've shipped"
+      lede="Backend and AI systems work in production, on teams and against real deadlines."
+    >
+      {/* An ordered list, because the order is the information. The rail is a gradient
+          on the list itself, fading out at the bottom so the timeline reads as
+          continuing rather than stopping at a hard end-cap.
+
+          `left-[5px]` puts the rail's centre at 5.5px, which is where the 10px markers
+          in TimelineItem centre too — the two have to be set together or the dots sit
+          visibly off the line. */}
+      <ol className="from-pulse/70 via-fog/30 relative flex flex-col gap-6 before:absolute before:top-3 before:bottom-3 before:left-[5px] before:w-px before:bg-gradient-to-b before:to-transparent">
         {EXPERIENCE.map((item, index) => (
-          <TimelineItem
-            key={`${item.company}-${item.role}`}
-            {...item}
-            isLast={index === EXPERIENCE.length - 1}
-          />
+          <TimelineItem key={`${item.company}-${item.role}`} {...item} delay={index * 0.08} />
         ))}
-      </div>
-    </section>
+      </ol>
+    </Section>
   )
 }
