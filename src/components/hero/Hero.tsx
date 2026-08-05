@@ -1,115 +1,151 @@
-import type { CSSProperties } from 'react'
+import { useRef, useState } from 'react'
 
+import { DeskLightSwitch } from './DeskLightSwitch'
+import { Greeting } from './Greeting'
+import { HeroScene } from './HeroScene'
+
+import { supportsWebGL } from '@/components/three/lib/webgl'
+
+import {
+  ArrowIcon,
+  DownloadIcon,
+  GitHubIcon,
+  LinkedInIcon,
+  MailIcon,
+} from '@/components/common/icons'
 import { usePrefersReducedMotion } from '@/hooks/usePrefersReducedMotion'
-import { usePointerParallax } from '@/hooks/usePointerParallax'
+import { API_BASE_URL } from '@/lib/env'
 import { useSiteContent } from '@/lib/siteContent/useSiteContent'
+import { CONTACT_EMAIL, GITHUB_URL, LINKEDIN_URL } from '@/lib/siteInfo'
 
-import { NodeGraphBackground } from './NodeGraphBackground'
+const SOCIALS = [
+  { label: 'GitHub', href: GITHUB_URL, Icon: GitHubIcon },
+  { label: 'LinkedIn', href: LINKEDIN_URL, Icon: LinkedInIcon },
+  { label: 'Email', href: `mailto:${CONTACT_EMAIL}`, Icon: MailIcon },
+]
 
+/**
+ * Split hero: type on the left, the workstation scene on the right.
+ *
+ * The halves are layered rather than columned — the canvas spans the whole section
+ * and is inset from 38% on large screens, with a horizontal scrim washing the left
+ * side back to solid. That lets the scene bleed off the right edge instead of sitting
+ * in a box, while the text column keeps a guaranteed contrast floor regardless of
+ * what the scene is doing behind it.
+ *
+ * The load-in stagger stays in CSS (`animate-rise` plus delays) rather than moving to
+ * the animation library: it runs exactly once and costs nothing at runtime.
+ */
 export function Hero() {
+  const sectionRef = useRef<HTMLElement>(null)
   const prefersReducedMotion = usePrefersReducedMotion()
   const animate = !prefersReducedMotion
   const { hero } = useSiteContent()
-  const parallax = usePointerParallax(8)
+  const [hasScene] = useState(supportsWebGL)
 
-  const offsetX = hero.profileImageOffsetX + (animate ? parallax.offset.x : 0)
-  const offsetY = hero.profileImageOffsetY + (animate ? parallax.offset.y : 0)
+  const rise = animate ? 'animate-rise' : ''
+  const delay = (ms: number) => (animate ? { animationDelay: `${ms}ms` } : undefined)
 
   return (
-    <section className="bg-void text-mist relative overflow-hidden">
-      <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true">
-        <div className={`hero-glow hero-glow--one ${animate ? 'animate-drift-one' : ''}`} />
-        <div className={`hero-glow hero-glow--two ${animate ? 'animate-drift-two' : ''}`} />
-      </div>
-      <NodeGraphBackground />
-      <div className="relative mx-auto grid max-w-5xl grid-cols-1 items-start gap-12 px-6 pt-28 pb-20 sm:pt-36 sm:pb-28 lg:grid-cols-[1.15fr_auto] lg:gap-16">
-        <div>
-          <p
-            className={`text-pulse flex flex-wrap items-center gap-x-2 font-mono text-sm tracking-wide uppercase ${animate ? 'animate-rise' : ''}`}
-          >
-            <span>{hero.designation}</span>
-            <span className="text-fog/50" aria-hidden="true">
-              ·
-            </span>
-            <span>{hero.tagline}</span>
-          </p>
-          <p
-            className={`font-tech text-fog mt-4 text-lg font-medium tracking-wide sm:text-xl ${animate ? 'animate-rise' : ''}`}
-            style={animate ? { animationDelay: '40ms' } : undefined}
-          >
-            {hero.name}
-          </p>
+    <section
+      ref={sectionRef}
+      className="bg-void text-mist relative isolate flex min-h-svh items-center overflow-hidden"
+    >
+      <HeroScene sectionRef={sectionRef} />
+
+      <div className="scrim-x pointer-events-none absolute inset-0 z-10" aria-hidden="true" />
+      <div className="scrim-y pointer-events-none absolute inset-0 z-10" aria-hidden="true" />
+
+      {/* The wrapper spans the full width and would otherwise swallow every click
+          aimed at the wall switch behind it, so pointer events are handed back to
+          the canvas and re-enabled only on the content itself. */}
+      <div className="pointer-events-none relative z-20 mx-auto w-full max-w-6xl px-6 py-32 sm:py-36">
+        <div className="pointer-events-auto max-w-2xl">
+          {hero.greeting && (
+            <div className={rise} style={delay(0)}>
+              <Greeting text={hero.greeting} animate={animate} />
+            </div>
+          )}
+
           <h1
-            className={`font-tech mt-4 max-w-[19ch] text-4xl leading-[1.08] font-bold tracking-tight text-balance sm:text-5xl lg:text-6xl xl:text-[3.75rem] ${
-              animate ? 'animate-rise' : ''
-            }`}
-            style={animate ? { animationDelay: '100ms' } : undefined}
+            className={`font-tech text-hero mt-7 font-bold tracking-[-0.035em] text-balance ${rise}`}
+            style={delay(80)}
           >
-            {hero.headline}
+            <span className="text-fog block text-[0.4em] font-medium tracking-[0.01em]">
+              I&apos;m
+            </span>
+            <span className="text-lit">{hero.name}</span>
           </h1>
+
           <p
-            className={`text-fog mt-7 max-w-2xl text-lg leading-8 sm:text-xl sm:leading-8 ${animate ? 'animate-rise' : ''}`}
-            style={animate ? { animationDelay: '180ms' } : undefined}
+            className={`font-tech text-mist/90 mt-5 text-xl font-medium tracking-tight sm:text-2xl ${rise}`}
+            style={delay(160)}
           >
-            {hero.intro}
+            {hero.designation}
           </p>
+
+          <p className={`text-fog text-lede mt-6 max-w-xl ${rise}`} style={delay(230)}>
+            {hero.headline}
+          </p>
+
           <div
-            className={`mt-9 flex flex-wrap items-center gap-4 ${animate ? 'animate-rise' : ''}`}
-            style={animate ? { animationDelay: '240ms' } : undefined}
+            className={`mt-10 flex flex-wrap items-center gap-3 ${rise}`}
+            style={delay(310)}
           >
             <a
               href={hero.ctaPrimary.href}
-              className="bg-pulse text-void hover:shadow-pulse/20 rounded-full px-6 py-2.5 font-mono text-sm transition-all hover:-translate-y-0.5 hover:shadow-lg hover:brightness-110"
+              className="group bg-pulse text-void hover:shadow-pulse/25 inline-flex items-center gap-2 rounded-full px-6 py-3 font-mono text-sm font-medium transition-all hover:-translate-y-0.5 hover:shadow-lg hover:brightness-110"
             >
               {hero.ctaPrimary.label}
+              <ArrowIcon className="size-4 transition-transform duration-300 group-hover:translate-x-1" />
             </a>
+
+            {/* Served by the backend, not bundled — the resume is whatever `GET /resume`
+                currently returns, so it can never go stale inside a build. */}
+            <a
+              href={`${API_BASE_URL}/resume`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="glass-blur text-mist hover:text-pulse inline-flex items-center gap-2 rounded-full px-6 py-3 font-mono text-sm transition-colors"
+            >
+              <DownloadIcon className="size-4" />
+              Download resume
+            </a>
+
+            {/* Third tier, but still a defined button: stacked on mobile, a text-only
+                link sat at a different left edge from the two pills above it. */}
             <a
               href={hero.ctaSecondary.href}
-              className="border-edge text-mist hover:border-pulse hover:text-pulse rounded-full border px-6 py-2.5 font-mono text-sm transition-colors"
+              className="border-edge text-fog hover:border-fog/40 hover:text-mist inline-flex items-center gap-2 rounded-full border px-6 py-3 font-mono text-sm transition-colors"
             >
               {hero.ctaSecondary.label}
             </a>
           </div>
-          {hero.availability && (
-            <p
-              className={`text-fog mt-8 flex items-center gap-2 font-mono text-xs tracking-wide uppercase ${animate ? 'animate-rise' : ''}`}
-              style={animate ? { animationDelay: '300ms' } : undefined}
-            >
-              <span className="animate-live-pulse bg-live size-2 rounded-full" aria-hidden="true" />
-              {hero.availability}
-            </p>
-          )}
-        </div>
-        <div
-          className={`group relative mx-auto flex justify-center lg:mx-0 lg:justify-end ${animate ? 'animate-rise' : ''}`}
-          style={{
-            animationDelay: animate ? '140ms' : undefined,
-            transform: `translate3d(${offsetX}px, ${offsetY}px, 0)`,
-            transition: 'transform 0.3s ease-out',
-          }}
-          onPointerMove={animate ? parallax.handlePointerMove : undefined}
-          onPointerLeave={animate ? parallax.handlePointerLeave : undefined}
-        >
-          {hero.profileImageEffects && (
-            <>
-              <div className="portrait-aura pointer-events-none -z-10" aria-hidden="true" />
-              <div className="portrait-ring pointer-events-none -z-10" aria-hidden="true" />
-            </>
-          )}
+
           <div
-            className="origin-bottom transition-transform duration-500 ease-out group-hover:scale-[1.035]"
-            style={{ '--portrait-scale': hero.profileImageScale } as CSSProperties}
+            className={`mt-12 flex flex-wrap items-center gap-4 ${rise}`}
+            style={delay(380)}
           >
-            <img
-              src={hero.profileImage}
-              alt={hero.name}
-              className="portrait-img w-auto max-w-[13rem] object-contain object-bottom sm:max-w-[15rem] lg:max-w-[17rem] xl:max-w-[18rem]"
-              style={{
-                filter: hero.profileImageEffects
-                  ? 'drop-shadow(0 35px 45px rgba(0,0,0,0.45))'
-                  : undefined,
-              }}
-            />
+            <ul className="flex items-center gap-3">
+              {SOCIALS.map(({ label, href, Icon }) => (
+                <li key={label}>
+                  <a
+                    href={href}
+                    target={href.startsWith('mailto:') ? undefined : '_blank'}
+                    rel="noopener noreferrer"
+                    aria-label={label}
+                    className="glass-blur text-fog hover:text-pulse flex size-11 items-center justify-center rounded-full transition-all hover:-translate-y-0.5"
+                  >
+                    <Icon className="size-[1.15rem]" />
+                  </a>
+                </li>
+              ))}
+            </ul>
+
+            {/* Visible control for the lamp is the wall switch inside the scene; this
+                is its keyboard/screen-reader equivalent, hidden until focused. Only
+                rendered when there is a scene to light. */}
+            {hasScene && <DeskLightSwitch />}
           </div>
         </div>
       </div>

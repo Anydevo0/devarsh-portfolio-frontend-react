@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react'
+import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { HttpResponse, http } from 'msw'
 import { describe, expect, it } from 'vitest'
@@ -37,13 +37,18 @@ describe('ChatWidget', () => {
     expect(screen.getByRole('dialog', { name: 'Chat with the assistant' })).toBeInTheDocument()
   })
 
+  // The panel plays an exit animation before it unmounts, so dismissal may or may
+  // not have completed by the next tick depending on what the animation runtime does
+  // in jsdom. `waitFor` on the absence is correct either way; asserting immediately
+  // fails when the exit is still running, and `waitForElementToBeRemoved` throws when
+  // it has already finished.
   it('closes the panel via the close button', async () => {
     const user = userEvent.setup()
     render(<ChatWidget />)
 
     await openWidget(user)
     await user.click(screen.getByRole('button', { name: 'Minimize chat' }))
-    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
   })
 
   it('closes the panel on Escape', async () => {
@@ -52,7 +57,7 @@ describe('ChatWidget', () => {
 
     await openWidget(user)
     await user.keyboard('{Escape}')
-    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
   })
 
   it('streams tokens into the assistant turn', async () => {

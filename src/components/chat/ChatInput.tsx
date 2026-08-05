@@ -1,5 +1,7 @@
 import { type FormEvent, useState } from 'react'
 
+import { SendIcon } from '@/components/common/icons'
+
 const MAX_MESSAGE_LENGTH = 2000
 
 interface ChatInputProps {
@@ -31,32 +33,17 @@ export function ChatInput({ disabled, onSend }: ChatInputProps) {
         value={value}
         onChange={(event) => setValue(event.target.value)}
         disabled={disabled}
-        placeholder="Message..."
-        className="flex-1 rounded-full border border-edge bg-void px-4 py-2.5 text-sm text-mist placeholder:text-fog focus-visible:border-pulse focus-visible:outline-none disabled:opacity-50"
+        placeholder={disabled ? 'Answering…' : 'Ask about my work…'}
+        className="border-edge bg-void/60 text-mist placeholder:text-fog/70 focus-visible:border-pulse min-w-0 flex-1 rounded-full border px-4 py-2.5 text-sm transition-colors disabled:opacity-50"
       />
       <button
         type="submit"
         disabled={disabled || !value.trim()}
         aria-label="Send message"
-        className="flex size-10 shrink-0 items-center justify-center rounded-full bg-pulse text-void transition-opacity hover:brightness-110 disabled:opacity-40"
+        className="bg-pulse text-void flex size-10 shrink-0 items-center justify-center rounded-full transition-all hover:brightness-110 disabled:opacity-40 disabled:hover:brightness-100"
       >
-        <SendIcon />
+        <SendIcon className="size-4" />
       </button>
     </form>
-  )
-}
-
-function SendIcon() {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      className="size-4 translate-x-px"
-      aria-hidden="true"
-    >
-      <path strokeLinecap="round" strokeLinejoin="round" d="M22 2 11 13M22 2l-7 20-4-9-9-4Z" />
-    </svg>
   )
 }

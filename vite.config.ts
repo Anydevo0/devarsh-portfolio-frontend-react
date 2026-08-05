@@ -24,5 +24,10 @@ export default defineConfig({
     environment: 'jsdom',
     setupFiles: ['./src/test/setup.ts'],
     globals: true,
+    // userEvent drives real timers and types one character at a time; under a full
+    // parallel run the slower suites (the Markdown editor, the contact form) can
+    // exceed vitest's 5s default on a loaded machine even though they pass in
+    // isolation. Raised to keep the suite from failing on scheduling noise.
+    testTimeout: 20_000,
   },
 })

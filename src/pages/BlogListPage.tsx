@@ -5,6 +5,8 @@ import { BlogCard } from '@/components/blog/BlogCard'
 import { BlogSearchBar } from '@/components/blog/BlogSearchBar'
 import { Pagination } from '@/components/blog/Pagination'
 import { TagFilter } from '@/components/blog/TagFilter'
+import { Reveal } from '@/components/common/Reveal'
+import { EmptyState, ErrorState, SkeletonRow } from '@/components/common/States'
 import { useBlogPosts } from '@/hooks/useBlogPosts'
 
 const LIMIT = 10
@@ -25,6 +27,8 @@ export function BlogListPage() {
     offset,
   })
 
+  const isFiltered = Boolean(activeQ || activeTag)
+
   function applyFilters(event: FormEvent) {
     event.preventDefault()
     const params = new URLSearchParams()
@@ -41,31 +45,57 @@ export function BlogListPage() {
   }
 
   return (
-    <main className="mx-auto max-w-3xl px-6 py-16 sm:py-20">
-      <h1 className="font-tech text-4xl font-bold text-mist sm:text-5xl">Writing</h1>
+    <main className="relative mx-auto max-w-4xl px-6 py-20 sm:py-28">
+      <div className="aurora aurora--halo animate-drift-two" aria-hidden="true" />
 
-      <form onSubmit={applyFilters} className="mt-8 flex flex-wrap items-center gap-3">
+      <header className="relative">
+        <p className="glass-soft inline-flex items-center gap-2.5 rounded-full py-1 pr-3.5 pl-2.5 font-mono text-[0.6875rem] tracking-[0.14em] uppercase">
+          <span className="text-pulse">GET</span>
+          <span className="bg-edge h-3 w-px" aria-hidden="true" />
+          <span className="text-fog">/blog</span>
+        </p>
+        <h1 className="font-tech text-section text-lit mt-5 font-bold tracking-[-0.03em]">
+          Notes from the build
+        </h1>
+        <p className="text-fog text-lede mt-5 max-w-2xl">
+          Backend architecture, AI systems, and the things that only show up in production.
+        </p>
+      </header>
+
+      <form
+        onSubmit={applyFilters}
+        className="relative mt-10 flex flex-col gap-3 sm:flex-row sm:items-center"
+      >
         <BlogSearchBar value={qInput} onChange={setQInput} />
         <TagFilter value={tagInput} onChange={setTagInput} />
         <button
           type="submit"
-          className="rounded-full border border-edge px-4 py-2 font-mono text-sm text-mist transition-colors hover:border-pulse hover:text-pulse"
+          className="glass text-mist hover:text-pulse shrink-0 rounded-xl px-5 py-2.5 font-mono text-sm transition-colors"
         >
           Search
         </button>
       </form>
 
-      <div className="mt-8 flex flex-col gap-4">
-        {isPending && <p className="font-mono text-sm text-fog">Loading…</p>}
+      <div className="relative mt-10 flex flex-col gap-5">
+        {isPending && [0, 1, 2].map((index) => <SkeletonRow key={index} />)}
+
         {isError && (
-          <p className="font-mono text-sm text-fog">
-            Couldn&apos;t load posts right now — please try again shortly.
-          </p>
+          <ErrorState>Couldn&apos;t load posts right now — please try again shortly.</ErrorState>
         )}
+
         {data && data.items.length === 0 && (
-          <p className="font-mono text-sm text-fog">// no posts match yet.</p>
+          <EmptyState>
+            {isFiltered
+              ? 'No posts match that search. Try a broader term or clear the tag filter.'
+              : 'No posts published yet — the first one is in progress.'}
+          </EmptyState>
         )}
-        {data?.items.map((post) => <BlogCard key={post.id} post={post} />)}
+
+        {data?.items.map((post, index) => (
+          <Reveal key={post.id} delay={index * 0.05}>
+            <BlogCard post={post} />
+          </Reveal>
+        ))}
       </div>
 
       {data && (

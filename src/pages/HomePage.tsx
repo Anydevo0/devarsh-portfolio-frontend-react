@@ -1,40 +1,36 @@
-import { Reveal } from '@/components/common/Reveal'
-import { ContactForm } from '@/components/contact/ContactForm'
+import { AboutSection } from '@/components/about/AboutSection'
+import { ContactSection } from '@/components/contact/ContactSection'
 import { ExperienceTimeline } from '@/components/experience/ExperienceTimeline'
 import { Hero } from '@/components/hero/Hero'
-import { ManifestBand } from '@/components/hero/ManifestBand'
-import { ProjectGrid } from '@/components/projects/ProjectGrid'
+import { PageAtmosphere } from '@/components/layout/PageAtmosphere'
+import { ProjectsSection } from '@/components/projects/ProjectsSection'
 import { SkillsSection } from '@/components/skills/SkillsSection'
 
+/**
+ * Section order is an argument: who I am, what I know, where I've done it, what I
+ * built, how to reach me. Evidence before the ask.
+ *
+ * Writing deliberately is not here. A three-post teaser competed with the projects
+ * grid immediately above it and sent people off the page before the ask; the blog is
+ * its own destination, reached from the nav.
+ *
+ * Each section owns its own reveal animation and its own heading, so this file stays
+ * a table of contents rather than a layout — the `<Section>` primitive carries the
+ * shared rhythm.
+ */
 export function HomePage() {
   return (
     <main>
       <Hero />
-      <Reveal>
-        <ManifestBand />
-      </Reveal>
-      <Reveal>
+      {/* One environment for the whole run below the hero — see PageAtmosphere. */}
+      <div className="relative isolate">
+        <PageAtmosphere />
+        <AboutSection />
         <SkillsSection />
-      </Reveal>
-      <Reveal>
         <ExperienceTimeline />
-      </Reveal>
-      <Reveal>
-        <section id="projects" className="mx-auto max-w-5xl px-6 py-20 sm:py-24">
-          <h2 className="font-tech text-3xl font-bold text-mist sm:text-4xl">Selected work</h2>
-          <div className="mt-10">
-            <ProjectGrid />
-          </div>
-        </section>
-      </Reveal>
-      <Reveal>
-        <section id="contact" className="mx-auto max-w-5xl px-6 py-20 sm:py-24">
-          <h2 className="font-tech text-3xl font-bold text-mist sm:text-4xl">Get in touch</h2>
-          <div className="mt-10 max-w-lg">
-            <ContactForm />
-          </div>
-        </section>
-      </Reveal>
+        <ProjectsSection />
+        <ContactSection />
+      </div>
     </main>
   )
 }

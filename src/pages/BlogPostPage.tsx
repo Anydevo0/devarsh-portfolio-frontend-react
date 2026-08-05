@@ -1,7 +1,10 @@
 import { Link, useParams } from 'react-router'
 
 import { MarkdownRenderer } from '@/components/common/MarkdownRenderer'
+import { ErrorState, SkeletonRow } from '@/components/common/States'
+import { ArrowIcon } from '@/components/common/icons'
 import { useBlogPost } from '@/hooks/useBlogPost'
+import { readingTimeMinutes } from '@/lib/readingTime'
 
 export function BlogPostPage() {
   const { slug } = useParams<{ slug: string }>()
@@ -9,45 +12,83 @@ export function BlogPostPage() {
 
   if (isPending) {
     return (
-      <main className="mx-auto max-w-3xl px-6 py-16">
-        <p className="font-mono text-sm text-fog">Loading…</p>
+      <main className="mx-auto max-w-3xl px-6 py-20">
+        <SkeletonRow />
       </main>
     )
   }
 
   if (isError || !post) {
     return (
-      <main className="mx-auto max-w-3xl px-6 py-16">
-        <p className="font-mono text-sm text-fog">
-          Couldn&apos;t find that post.{' '}
+      <main className="mx-auto max-w-3xl px-6 py-20">
+        <ErrorState>
+          That post doesn&apos;t exist or has been unpublished.{' '}
           <Link to="/blog" className="text-pulse underline">
-            Back to writing
+            Back to all posts
           </Link>
-        </p>
+          .
+        </ErrorState>
       </main>
     )
   }
 
   return (
-    <main className="mx-auto max-w-3xl px-6 py-16 sm:py-20">
-      <Link to="/blog" className="font-mono text-sm text-fog transition-colors hover:text-pulse">
-        ← All posts
+    <main className="relative mx-auto max-w-3xl px-6 py-20 sm:py-28">
+      <div className="aurora aurora--pulse animate-drift-one" aria-hidden="true" />
+
+      <Link
+        to="/blog"
+        className="text-fog hover:text-pulse group relative inline-flex items-center gap-2 font-mono text-sm transition-colors"
+      >
+        <ArrowIcon className="size-4 rotate-180 transition-transform duration-300 group-hover:-translate-x-1" />
+        All posts
       </Link>
-      <p className="mt-5 font-mono text-xs text-fog">
-        {new Date(post.created_at).toLocaleDateString('en-US', {
-          year: 'numeric',
-          month: 'short',
-          day: 'numeric',
-        })}
-      </p>
-      <h1 className="mt-1 font-tech text-4xl font-bold text-mist sm:text-5xl">{post.title}</h1>
-      {post.tags.length > 0 && (
-        <p className="mt-3 font-mono text-xs text-fog">
-          {post.tags.map((tag) => `#${tag}`).join(' ')}
-        </p>
+
+      <header className="relative mt-8">
+        {/* Reading time is computed from the real body, which only the single-post
+            endpoint returns — see lib/readingTime.ts for why cards omit it. */}
+        <div className="text-fog flex flex-wrap items-center gap-x-3 gap-y-1 font-mono text-xs">
+          <time dateTime={post.created_at}>
+            {new Date(post.created_at).toLocaleDateString('en-US', {
+              year: 'numeric',
+              month: 'short',
+              day: 'numeric',
+            })}
+          </time>
+          <span aria-hidden="true">·</span>
+          <span>{readingTimeMinutes(post.content)} min read</span>
+        </div>
+
+        <h1 className="font-tech text-section text-lit mt-4 font-bold tracking-[-0.03em] text-balance">
+          {post.title}
+        </h1>
+
+        {post.tags.length > 0 && (
+          <ul className="mt-6 flex flex-wrap gap-1.5">
+            {post.tags.map((tag) => (
+              <li
+                key={tag}
+                className="border-edge bg-void/50 text-fog rounded-md border px-2 py-1 font-mono text-[0.6875rem]"
+              >
+                {tag}
+              </li>
+            ))}
+          </ul>
+        )}
+      </header>
+
+      {post.cover_image_url && (
+        <img
+          src={post.cover_image_url}
+          alt=""
+          className="border-edge relative mt-10 aspect-video w-full rounded-2xl border object-cover"
+        />
       )}
-      <div className="mt-8">
-        <MarkdownRenderer content={post.content} className="prose prose-tech" />
+
+      <hr className="hairline relative mt-10 border-0" />
+
+      <div className="relative mt-10">
+        <MarkdownRenderer content={post.content} className="prose prose-tech max-w-none" />
       </div>
     </main>
   )
