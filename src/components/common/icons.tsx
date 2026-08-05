@@ -115,6 +115,17 @@ export function MenuIcon(props: IconProps) {
   )
 }
 
+export function LampIcon(props: IconProps) {
+  return (
+    <Stroke {...props}>
+      <path d="M6.5 10.5 12 3l5.5 7.5H6.5Z" />
+      <path d="M9.5 10.5a2.5 2.5 0 0 0 5 0" />
+      <path d="M12 13v5" />
+      <path d="M9 21h6" />
+    </Stroke>
+  )
+}
+
 export function ChatIcon(props: IconProps) {
   return (
     <Stroke {...props}>

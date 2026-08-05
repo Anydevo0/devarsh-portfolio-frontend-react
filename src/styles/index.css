@@ -31,14 +31,22 @@
   --color-live: #3ddc97;
   --color-alert: #ff6b6b;
 
+  /* The one warm colour in the interface, used only for the hero greeting and the
+     desk-lamp switch it sits beside. Deliberately not a fourth accent: it marks the
+     human note on the page, and it ties to the single warm light in the 3D scene. */
+  --color-saffron: #e9b872;
+
   --font-display: 'Fraunces Variable', ui-serif, Georgia, serif;
   --font-sans: 'Work Sans Variable', ui-sans-serif, system-ui, sans-serif;
   --font-mono: 'JetBrains Mono Variable', ui-monospace, 'SFMono-Regular', monospace;
   --font-tech: 'Space Grotesk Variable', ui-sans-serif, system-ui, sans-serif;
+  /* Kalam — Latin drawn alongside Devanagari by the Indian Type Foundry. Loaded as
+     the latin-400 subset only (~22 KB) and used for exactly one string. */
+  --font-script: 'Kalam', 'Segoe Script', cursive;
 
   /* Fluid display sizes — the hero and section headings scale continuously between
      breakpoints instead of stepping, so the type never looks stranded mid-viewport. */
-  --text-hero: clamp(2.6rem, 6.2vw, 5rem);
+  --text-hero: clamp(2.4rem, 5.7vw, 4.6rem);
   --text-hero--line-height: 1.02;
   --text-section: clamp(1.9rem, 3.6vw, 3rem);
   --text-section--line-height: 1.08;
@@ -82,14 +90,26 @@ body {
    3D scene and ambient gradients show through it, which is what ties the page
    layers together — a solid card would sit on top of the scene instead.
    --------------------------------------------------------------------------- */
+/*
+ * No `backdrop-filter` here, deliberately.
+ *
+ * These classes are on every card in the projects grid, the timeline, the skills
+ * panel and the contact form — dozens of elements at once. A backdrop blur forces the
+ * compositor to re-sample and re-blur everything behind each one on every scrolled
+ * frame, and with that many of them it was the dominant cost of scrolling the page.
+ * What sits behind them is the page's own gradient environment, so a translucent fill
+ * reproduces the effect almost exactly for none of the cost.
+ *
+ * The two places a real blur earns its keep — surfaces floating over the moving 3D
+ * scene, and the sticky header — use `.glass-blur` and the `backdrop-blur` utility
+ * respectively. Both are single elements.
+ */
 .glass {
   background: linear-gradient(
     180deg,
-    color-mix(in oklab, var(--color-panel) 70%, transparent),
-    color-mix(in oklab, var(--color-abyss) 72%, transparent)
+    color-mix(in oklab, var(--color-panel) 82%, transparent),
+    color-mix(in oklab, var(--color-abyss) 84%, transparent)
   );
-  backdrop-filter: blur(16px) saturate(135%);
-  -webkit-backdrop-filter: blur(16px) saturate(135%);
   border: 1px solid color-mix(in oklab, var(--color-mist) 8%, transparent);
   box-shadow:
     inset 0 1px 0 color-mix(in oklab, var(--color-mist) 7%, transparent),
@@ -97,6 +117,12 @@ body {
 }
 
 .glass-soft {
+  background: color-mix(in oklab, var(--color-panel) 62%, transparent);
+  border: 1px solid color-mix(in oklab, var(--color-mist) 6%, transparent);
+}
+
+/* The real thing, for the handful of elements that sit over the 3D canvas. */
+.glass-blur {
   background: color-mix(in oklab, var(--color-panel) 45%, transparent);
   backdrop-filter: blur(12px) saturate(125%);
   -webkit-backdrop-filter: blur(12px) saturate(125%);
@@ -219,6 +245,92 @@ body {
 }
 .animate-drift-two {
   animation: drift-two 26s ease-in-out infinite;
+}
+
+/* ---------------------------------------------------------------------------
+   Section backgrounds
+   Each major section gets its own treatment so the page reads as chapters rather
+   than one long scroll, but they are all built from the same three ingredients —
+   a ruled pattern, a colour pool, and at most one slow-moving element — so they
+   stay a family. Every one is masked to fade out before it reaches the text, and
+   every animation moves only transform or opacity.
+   --------------------------------------------------------------------------- */
+
+/* A ruled grid, faded out at the edges so it never meets the section boundary on
+   a hard line. `--grid-size` and `--grid-ink` are set per variant. */
+.bg-grid {
+  background-image:
+    linear-gradient(to right, var(--grid-ink) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--grid-ink) 1px, transparent 1px);
+  background-size: var(--grid-size) var(--grid-size);
+  mask-image: radial-gradient(ellipse 80% 65% at 50% 45%, #000 20%, transparent 78%);
+  -webkit-mask-image: radial-gradient(ellipse 80% 65% at 50% 45%, #000 20%, transparent 78%);
+}
+
+/* Glowing nodes on the skills grid — a distributed-systems read, and the reason
+   that section's pattern is a grid rather than dots. */
+@keyframes node-pulse {
+  0%,
+  100% {
+    opacity: 0.25;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.9;
+    transform: scale(1.35);
+  }
+}
+.animate-node {
+  animation: node-pulse 4.5s ease-in-out infinite;
+}
+
+/* The beam running down the experience section, behind the timeline rail. */
+@keyframes beam-breathe {
+  0%,
+  100% {
+    opacity: 0.25;
+    transform: scaleY(0.92);
+  }
+  50% {
+    opacity: 0.6;
+    transform: scaleY(1);
+  }
+}
+.animate-beam {
+  animation: beam-breathe 7s ease-in-out infinite;
+  transform-origin: top;
+}
+
+/* Outlined shapes drifting behind the projects grid. Two speeds and both
+   directions, so they never appear to move as a block. */
+@keyframes drift-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+.animate-spin-slow {
+  animation: drift-spin 48s linear infinite;
+}
+.animate-spin-slower {
+  animation: drift-spin 72s linear infinite reverse;
+}
+
+/* The horizon grid flowing toward the viewer. Scrolls exactly one 64px tile per
+   cycle so the loop is seamless, and moves background-position rather than the
+   element, which keeps the perspective transform from being recomputed. */
+@keyframes horizon-flow {
+  from {
+    background-position: 0 0;
+  }
+  to {
+    background-position: 0 64px;
+  }
+}
+.animate-horizon {
+  animation: horizon-flow 6s linear infinite;
 }
 
 /* A faint film of noise over the whole public shell. Large flat gradient fields
@@ -445,6 +557,21 @@ body {
 }
 .typing-dot {
   animation: typing-dot 1.2s ease-in-out infinite;
+}
+
+/* The hero greeting's drift — a few pixels over several seconds, closer to breathing
+   than to floating. Class-gated on reduced motion at the component level. */
+@keyframes float-soft {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-4px);
+  }
+}
+.animate-float-soft {
+  animation: float-soft 5s ease-in-out infinite;
 }
 
 /* Terminal caret for the hero's mono line. */

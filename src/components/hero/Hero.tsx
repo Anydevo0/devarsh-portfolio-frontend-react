@@ -1,6 +1,10 @@
-import { useRef } from 'react'
+import { useRef, useState } from 'react'
 
+import { DeskLightSwitch } from './DeskLightSwitch'
+import { Greeting } from './Greeting'
 import { HeroScene } from './HeroScene'
+
+import { supportsWebGL } from '@/components/three/lib/webgl'
 
 import {
   ArrowIcon,
@@ -37,6 +41,7 @@ export function Hero() {
   const prefersReducedMotion = usePrefersReducedMotion()
   const animate = !prefersReducedMotion
   const { hero } = useSiteContent()
+  const [hasScene] = useState(supportsWebGL)
 
   const rise = animate ? 'animate-rise' : ''
   const delay = (ms: number) => (animate ? { animationDelay: `${ms}ms` } : undefined)
@@ -51,19 +56,15 @@ export function Hero() {
       <div className="scrim-x pointer-events-none absolute inset-0 z-10" aria-hidden="true" />
       <div className="scrim-y pointer-events-none absolute inset-0 z-10" aria-hidden="true" />
 
-      <div className="relative z-20 mx-auto w-full max-w-6xl px-6 py-32 sm:py-36">
-        <div className="max-w-2xl">
-          {hero.availability && (
-            <p
-              className={`glass-soft text-fog inline-flex items-center gap-2.5 rounded-full py-1.5 pr-4 pl-3 font-mono text-xs tracking-wide ${rise}`}
-              style={delay(0)}
-            >
-              <span
-                className={`bg-live size-1.5 rounded-full ${animate ? 'animate-live-pulse' : ''}`}
-                aria-hidden="true"
-              />
-              {hero.availability}
-            </p>
+      {/* The wrapper spans the full width and would otherwise swallow every click
+          aimed at the wall switch behind it, so pointer events are handed back to
+          the canvas and re-enabled only on the content itself. */}
+      <div className="pointer-events-none relative z-20 mx-auto w-full max-w-6xl px-6 py-32 sm:py-36">
+        <div className="pointer-events-auto max-w-2xl">
+          {hero.greeting && (
+            <div className={rise} style={delay(0)}>
+              <Greeting text={hero.greeting} animate={animate} />
+            </div>
           )}
 
           <h1
@@ -81,10 +82,6 @@ export function Hero() {
             style={delay(160)}
           >
             {hero.designation}
-            <span className="text-pulse mx-2.5" aria-hidden="true">
-              —
-            </span>
-            {hero.tagline}
           </p>
 
           <p className={`text-fog text-lede mt-6 max-w-xl ${rise}`} style={delay(230)}>
@@ -109,7 +106,7 @@ export function Hero() {
               href={`${API_BASE_URL}/resume`}
               target="_blank"
               rel="noopener noreferrer"
-              className="glass text-mist hover:text-pulse inline-flex items-center gap-2 rounded-full px-6 py-3 font-mono text-sm transition-colors"
+              className="glass-blur text-mist hover:text-pulse inline-flex items-center gap-2 rounded-full px-6 py-3 font-mono text-sm transition-colors"
             >
               <DownloadIcon className="size-4" />
               Download resume
@@ -125,31 +122,32 @@ export function Hero() {
             </a>
           </div>
 
-          <ul className={`mt-12 flex items-center gap-3 ${rise}`} style={delay(380)}>
-            {SOCIALS.map(({ label, href, Icon }) => (
-              <li key={label}>
-                <a
-                  href={href}
-                  target={href.startsWith('mailto:') ? undefined : '_blank'}
-                  rel="noopener noreferrer"
-                  aria-label={label}
-                  className="glass-soft text-fog hover:text-pulse flex size-11 items-center justify-center rounded-full transition-all hover:-translate-y-0.5"
-                >
-                  <Icon className="size-[1.15rem]" />
-                </a>
-              </li>
-            ))}
-          </ul>
-        </div>
-      </div>
+          <div
+            className={`mt-12 flex flex-wrap items-center gap-4 ${rise}`}
+            style={delay(380)}
+          >
+            <ul className="flex items-center gap-3">
+              {SOCIALS.map(({ label, href, Icon }) => (
+                <li key={label}>
+                  <a
+                    href={href}
+                    target={href.startsWith('mailto:') ? undefined : '_blank'}
+                    rel="noopener noreferrer"
+                    aria-label={label}
+                    className="glass-blur text-fog hover:text-pulse flex size-11 items-center justify-center rounded-full transition-all hover:-translate-y-0.5"
+                  >
+                    <Icon className="size-[1.15rem]" />
+                  </a>
+                </li>
+              ))}
+            </ul>
 
-      {/* Signposts that scrolling drives the scene, rather than decorating the corner. */}
-      <div
-        className="text-fog/60 absolute bottom-8 left-1/2 z-20 hidden -translate-x-1/2 flex-col items-center gap-2 font-mono text-[0.625rem] tracking-[0.25em] uppercase lg:flex"
-        aria-hidden="true"
-      >
-        Scroll
-        <span className="from-fog/50 h-10 w-px bg-gradient-to-b to-transparent" />
+            {/* Visible control for the lamp is the wall switch inside the scene; this
+                is its keyboard/screen-reader equivalent, hidden until focused. Only
+                rendered when there is a scene to light. */}
+            {hasScene && <DeskLightSwitch />}
+          </div>
+        </div>
       </div>
     </section>
   )

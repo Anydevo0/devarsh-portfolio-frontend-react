@@ -6,6 +6,7 @@ import { createMaterialPalette } from './lib/materials'
 import type { SceneQuality } from './lib/textures'
 import type { SceneInput } from './lib/useSceneInput'
 import { Chair } from './parts/Chair'
+import { DeskLamp } from './parts/DeskLamp'
 import { Desk } from './parts/Desk'
 import { Deskware } from './parts/Deskware'
 import { Engineer } from './parts/Engineer'
@@ -13,6 +14,7 @@ import { Keyboard } from './parts/Keyboard'
 import { Lighting } from './parts/Lighting'
 import { Monitor } from './parts/Monitor'
 import { Room } from './parts/Room'
+import { WallSwitch } from './parts/WallSwitch'
 
 /** Where the rig sits before any scroll. Slightly off-axis so the desk reads in perspective. */
 const BASE_ROTATION = -0.1
@@ -40,9 +42,21 @@ interface WorkstationSceneProps {
   quality: SceneQuality
   animate: boolean
   input: SceneInput
+  /** Desk-lamp state, from the persisted store the wall switch writes to. */
+  isLightOn: boolean
+  onToggleLight: () => void
+  /** True until the visitor has used the switch — drives its attract pulse. */
+  showSwitchHint: boolean
 }
 
-export function WorkstationScene({ quality, animate, input }: WorkstationSceneProps) {
+export function WorkstationScene({
+  quality,
+  animate,
+  input,
+  isLightOn,
+  onToggleLight,
+  showSwitchHint,
+}: WorkstationSceneProps) {
   const rig = useRef<THREE.Group>(null)
 
   // One palette for the whole scene. Rebuilt only if the device tier changes, which
@@ -94,7 +108,7 @@ export function WorkstationScene({ quality, animate, input }: WorkstationScenePr
       {/* Fog is what makes the room feel like a room: the wall and floor fall away
           into the same value as the page background, so the canvas has no visible edge. */}
       <fog attach="fog" args={['#05070b', 3.4, 9.5]} />
-      <Lighting input={input} animate={animate} />
+      <Lighting input={input} animate={animate} isLightOn={isLightOn} />
 
       <group ref={rig} rotation={[0, BASE_ROTATION, 0]}>
         <Room palette={palette} quality={quality} />
@@ -102,8 +116,16 @@ export function WorkstationScene({ quality, animate, input }: WorkstationScenePr
         <Monitor palette={palette} quality={quality} animate={animate} />
         <Keyboard palette={palette} quality={quality} />
         <Deskware palette={palette} quality={quality} animate={animate} />
+        <DeskLamp palette={palette} quality={quality} isOn={isLightOn} animate={animate} />
         <Chair palette={palette} quality={quality} />
         <Engineer palette={palette} quality={quality} animate={animate} />
+        <WallSwitch
+          palette={palette}
+          isOn={isLightOn}
+          animate={animate}
+          onToggle={onToggleLight}
+          showHint={showSwitchHint}
+        />
       </group>
     </>
   )

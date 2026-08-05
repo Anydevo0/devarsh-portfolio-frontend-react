@@ -1,9 +1,12 @@
-import { type RefObject, Suspense, lazy, useEffect, useRef, useState } from 'react'
+import { type RefObject, Suspense, lazy, useCallback, useEffect, useRef, useState } from 'react'
 
 import { SceneBoundary } from '@/components/three/SceneBoundary'
 import { useSceneInput } from '@/components/three/lib/useSceneInput'
+import { supportsWebGL } from '@/components/three/lib/webgl'
 import { useSceneQuality } from '@/components/three/useSceneQuality'
 import { usePrefersReducedMotion } from '@/hooks/usePrefersReducedMotion'
+import { hasStoredPreference, setDeskLight } from '@/lib/deskLight/store'
+import { useDeskLight } from '@/lib/deskLight/useDeskLight'
 
 // Lazy so three.js, drei and the whole workstation land in their own chunk. The
 // initial bundle — and every route that is not the home page — never downloads it.
@@ -22,6 +25,13 @@ export function HeroScene({ sectionRef }: { sectionRef: RefObject<HTMLElement | 
   const input = useSceneInput(sectionRef)
   const quality = useSceneQuality()
   const prefersReducedMotion = usePrefersReducedMotion()
+  const isLightOn = useDeskLight()
+  const [showSwitchHint, setShowSwitchHint] = useState(() => !hasStoredPreference())
+
+  const handleToggleLight = useCallback(() => {
+    setDeskLight(!isLightOn)
+    setShowSwitchHint(false)
+  }, [isLightOn])
 
   // Resolved once, lazily, on first render. The check itself is cheap; what defers
   // the actual cost is `lazy` below — the headline paints from the main bundle while
@@ -55,6 +65,9 @@ export function HeroScene({ sectionRef }: { sectionRef: RefObject<HTMLElement | 
               quality={quality}
               animate={!prefersReducedMotion}
               active={isOnScreen}
+              isLightOn={isLightOn}
+              onToggleLight={handleToggleLight}
+              showSwitchHint={showSwitchHint}
             />
           ) : (
             <ScenePoster />
@@ -87,16 +100,3 @@ function ScenePoster() {
   )
 }
 
-/**
- * Cheap, honest capability check: if a context cannot be created, three.js would
- * only fail later and louder. Also what keeps the jsdom test environment — which has
- * no WebGL — on the poster path instead of booting a renderer.
- */
-function supportsWebGL(): boolean {
-  try {
-    const canvas = document.createElement('canvas')
-    return Boolean(canvas.getContext('webgl2') ?? canvas.getContext('webgl'))
-  } catch {
-    return false
-  }
-}

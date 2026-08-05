@@ -9,7 +9,8 @@ export interface HeroContent {
   tagline: string
   headline: string
   intro: string
-  availability: string
+  /** The hero's opening line, set in the script face. */
+  greeting: string
   ctaPrimary: CtaButtonContent
   ctaSecondary: CtaButtonContent
 }

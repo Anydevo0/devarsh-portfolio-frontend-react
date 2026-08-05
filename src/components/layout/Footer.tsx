@@ -1,6 +1,7 @@
 import { Link } from 'react-router'
 
 import { GitHubIcon, LinkedInIcon, MailIcon } from '@/components/common/icons'
+import { useSiteContent } from '@/lib/siteContent/useSiteContent'
 import { CONTACT_EMAIL, GITHUB_URL, LINKEDIN_URL } from '@/lib/siteInfo'
 
 const SOCIALS = [
@@ -10,6 +11,11 @@ const SOCIALS = [
 ]
 
 export function Footer() {
+  // The hero no longer prints the tagline, so this is where that content field now
+  // surfaces — keeping it live and editable rather than leaving a dead admin input,
+  // and replacing a string that used to be hardcoded here.
+  const { hero } = useSiteContent()
+
   return (
     <footer className="relative mt-8">
       <hr className="hairline mx-auto max-w-6xl border-0" />
@@ -19,7 +25,8 @@ export function Footer() {
             Devarsh Chhatrala
           </p>
           <p className="text-fog mt-1 font-mono text-xs">
-            © {new Date().getFullYear()} · Backend &amp; AI systems
+            © {new Date().getFullYear()}
+            {hero.tagline ? ` · ${hero.tagline}` : ''}
           </p>
         </div>
 

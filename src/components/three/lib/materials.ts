@@ -3,7 +3,9 @@ import * as THREE from 'three'
 import {
   createCodeTexture,
   createGlowTexture,
+  createLatteTexture,
   createMeshWeaveTexture,
+  createSwitchLabelTexture,
   type SceneQuality,
 } from './textures'
 
@@ -34,6 +36,20 @@ export interface MaterialPalette {
   accentBeam: THREE.MeshStandardMaterial
   accentHalo: THREE.MeshStandardMaterial
   mug: THREE.MeshStandardMaterial
+  /** Glazed ceramic — same body as `mug`, but polished so the rim catches a highlight. */
+  mugGlaze: THREE.MeshStandardMaterial
+  coffee: THREE.MeshStandardMaterial
+  /** Emissive interior of the lamp shade; its intensity is animated by `DeskLamp`. */
+  lampShade: THREE.MeshStandardMaterial
+  /** Owned per-instance rather than shared, because `DeskLamp` animates their opacity. */
+  lampBulbGlow: THREE.SpriteMaterial
+  lampPoolGlow: THREE.SpriteMaterial
+  /* The wall switch. These opt out of fog — see the note in `WallSwitch`. */
+  switchPlate: THREE.MeshStandardMaterial
+  switchRocker: THREE.MeshStandardMaterial
+  switchLed: THREE.MeshStandardMaterial
+  switchLabel: THREE.MeshBasicMaterial
+  switchHalo: THREE.SpriteMaterial
   room: THREE.MeshStandardMaterial
   floor: THREE.MeshStandardMaterial
   /** Painted onto the floor to fake contact occlusion — cheaper than a shadow map. */
@@ -75,6 +91,8 @@ export function createMaterialPalette(quality: SceneQuality): MaterialPalette {
   const codeTexture = createCodeTexture(quality)
   const weave = createMeshWeaveTexture()
   const glowTexture = createGlowTexture()
+  const latte = createLatteTexture()
+  const switchLabel = createSwitchLabelTexture()
 
   const glow = Object.fromEntries(
     Object.entries(GLOW_TONES).map(([tone, color]) => [
@@ -122,7 +140,64 @@ export function createMaterialPalette(quality: SceneQuality): MaterialPalette {
     accentBeam: emissive('#22d3ee', 2.1),
     accentHalo: emissive('#8b5cf6', 1.9),
 
-    mug: standard('#222b3a', 0.55, 0.08),
+    // Ceramic, not the dark plastic everything else on the desk is made of. A pale
+    // glazed body is the one light-valued object in the scene, which is what lets the
+    // desk lamp visibly land on something when it is switched on.
+    mug: standard('#e4dccd', 0.42, 0.02),
+    mugGlaze: standard('#f0e9dc', 0.18, 0.04),
+    coffee: standard('#2f1b0f', 0.22, 0.05, { map: latte }),
+
+    lampShade: standard('#f0ddc4', 0.5, 0.06, {
+      emissive: new THREE.Color('#ffc489'),
+      emissiveIntensity: 0,
+      side: THREE.DoubleSide,
+      toneMapped: false,
+    }),
+    lampBulbGlow: new THREE.SpriteMaterial({
+      map: glowTexture,
+      color: '#ffcf9c',
+      blending: THREE.AdditiveBlending,
+      transparent: true,
+      opacity: 0,
+      depthWrite: false,
+      toneMapped: false,
+    }),
+    lampPoolGlow: new THREE.SpriteMaterial({
+      map: glowTexture,
+      color: '#ffb277',
+      blending: THREE.AdditiveBlending,
+      transparent: true,
+      opacity: 0,
+      depthWrite: false,
+      toneMapped: false,
+    }),
+
+    switchPlate: standard('#cfd6e2', 0.55, 0.05, { fog: false }),
+    switchRocker: standard('#eef2f8', 0.4, 0.03, { fog: false }),
+    switchLed: standard('#3ddc97', 0.4, 0, {
+      emissive: new THREE.Color('#3ddc97'),
+      emissiveIntensity: 0.35,
+      toneMapped: false,
+      fog: false,
+    }),
+    switchLabel: new THREE.MeshBasicMaterial({
+      map: switchLabel,
+      transparent: true,
+      depthWrite: false,
+      toneMapped: false,
+      fog: false,
+    }),
+    switchHalo: new THREE.SpriteMaterial({
+      map: glowTexture,
+      color: '#5b7fff',
+      blending: THREE.AdditiveBlending,
+      transparent: true,
+      opacity: 0.2,
+      depthWrite: false,
+      toneMapped: false,
+      fog: false,
+    }),
+
     room: standard('#0a0e16', 0.96, 0),
     floor: standard('#070a11', 0.88, 0.04),
     contactShadow: new THREE.MeshBasicMaterial({
@@ -139,7 +214,7 @@ export function createMaterialPalette(quality: SceneQuality): MaterialPalette {
   return {
     ...palette,
     dispose() {
-      for (const texture of [codeTexture, weave, glowTexture]) texture.dispose()
+      for (const texture of [codeTexture, weave, glowTexture, latte, switchLabel]) texture.dispose()
       for (const material of Object.values(glow)) material.dispose()
       for (const value of Object.values(palette)) {
         if (value instanceof THREE.Material) value.dispose()

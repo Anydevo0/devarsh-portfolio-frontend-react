@@ -288,6 +288,85 @@ export function createGlowTexture(): THREE.CanvasTexture {
 }
 
 /**
+ * The surface of the coffee: dark espresso with a poured rosetta in crema.
+ *
+ * Mapped onto the disc inside the mug, where it occupies maybe ten pixels on screen.
+ * That is exactly why it is worth having — at this size it does not read as "latte
+ * art", it reads as the drink not being a flat brown circle, which is the difference
+ * between a modelled prop and a placeholder.
+ */
+export function createLatteTexture(): THREE.CanvasTexture {
+  const size = 128
+  const canvas = createCanvas(size, size)
+  const ctx = canvas.getContext('2d')!
+  const centre = size / 2
+
+  const coffee = ctx.createRadialGradient(centre, centre, 2, centre, centre, centre)
+  coffee.addColorStop(0, '#4a2c18')
+  coffee.addColorStop(0.7, '#2f1b0f')
+  coffee.addColorStop(1, '#1d1108')
+  ctx.fillStyle = coffee
+  ctx.fillRect(0, 0, size, size)
+
+  // Rosetta: paired leaves narrowing along the pour, then a stem drawn back through.
+  ctx.strokeStyle = 'rgba(226, 200, 164, 0.85)'
+  ctx.lineCap = 'round'
+  for (let i = 0; i < 6; i += 1) {
+    const t = i / 5
+    const y = 34 + t * 52
+    const spread = 30 * (1 - t * 0.72)
+    ctx.lineWidth = 5.5 * (1 - t * 0.45)
+    ctx.beginPath()
+    ctx.moveTo(centre - spread, y)
+    ctx.quadraticCurveTo(centre, y - 11, centre + spread, y)
+    ctx.stroke()
+  }
+  ctx.strokeStyle = 'rgba(236, 214, 184, 0.9)'
+  ctx.lineWidth = 4
+  ctx.beginPath()
+  ctx.moveTo(centre, 28)
+  ctx.lineTo(centre, 96)
+  ctx.stroke()
+
+  const texture = new THREE.CanvasTexture(canvas)
+  texture.colorSpace = THREE.SRGBColorSpace
+  return texture
+}
+
+/**
+ * The "toggle light" caption etched under the wall switch.
+ *
+ * Drawn to a canvas and mapped onto a plane rather than rendered as DOM through a
+ * projection helper: the label has to stay stuck to the plate while the rig rotates,
+ * and a texture does that for free with no per-frame screen-space maths.
+ */
+export function createSwitchLabelTexture(): THREE.CanvasTexture {
+  const width = 512
+  const height = 110
+  const canvas = createCanvas(width, height)
+  const ctx = canvas.getContext('2d')!
+
+  ctx.textAlign = 'center'
+  ctx.textBaseline = 'middle'
+  ctx.font = '600 44px "JetBrains Mono", ui-monospace, monospace'
+  ctx.letterSpacing = '6px'
+  ctx.fillStyle = 'rgba(232, 237, 247, 0.82)'
+  ctx.fillText('TOGGLE LIGHT', width / 2, height / 2 - 4)
+
+  // A short rule under the words, matching the site's hairline dividers.
+  const gradient = ctx.createLinearGradient(width * 0.22, 0, width * 0.78, 0)
+  gradient.addColorStop(0, 'rgba(91,127,255,0)')
+  gradient.addColorStop(0.5, 'rgba(91,127,255,0.75)')
+  gradient.addColorStop(1, 'rgba(91,127,255,0)')
+  ctx.fillStyle = gradient
+  ctx.fillRect(width * 0.22, height - 26, width * 0.56, 2)
+
+  const texture = new THREE.CanvasTexture(canvas)
+  texture.colorSpace = THREE.SRGBColorSpace
+  return texture
+}
+
+/**
  * Alpha mask for the chair's suspension back. An ergonomic task chair has a woven
  * mesh back rather than a solid panel — which is also what keeps the seated figure
  * visible through it from the camera's three-quarter angle.

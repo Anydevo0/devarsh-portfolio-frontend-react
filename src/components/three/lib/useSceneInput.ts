@@ -29,31 +29,46 @@ export function useSceneInput(targetRef: RefObject<HTMLElement | null>): SceneIn
 
   useEffect(() => {
     let frame = 0
+    // Cached, because reading `offsetHeight` forces the browser to flush pending
+    // layout. Doing that inside the scroll handler meant a synchronous layout on
+    // every scroll frame — the single most expensive thing this hook did, and the
+    // main source of scroll jank on the home page. The hero's height only changes on
+    // resize, so it is measured there instead.
+    let heroHeight = targetRef.current?.offsetHeight ?? window.innerHeight
+    let viewportWidth = window.innerWidth
+    let viewportHeight = window.innerHeight
 
     function readScroll() {
       frame = 0
-      const height = targetRef.current?.offsetHeight ?? window.innerHeight
-      input.current.scroll = Math.min(Math.max(window.scrollY / Math.max(height, 1), 0), 1)
+      input.current.scroll = Math.min(Math.max(window.scrollY / Math.max(heroHeight, 1), 0), 1)
     }
 
     function handleScroll() {
       if (frame === 0) frame = requestAnimationFrame(readScroll)
     }
 
+    function handleResize() {
+      heroHeight = targetRef.current?.offsetHeight ?? window.innerHeight
+      viewportWidth = window.innerWidth
+      viewportHeight = window.innerHeight
+      handleScroll()
+    }
+
     function handlePointer(event: PointerEvent) {
-      input.current.pointerX = (event.clientX / window.innerWidth) * 2 - 1
-      input.current.pointerY = (event.clientY / window.innerHeight) * 2 - 1
+      // Pure arithmetic against cached dimensions — no layout read per move.
+      input.current.pointerX = (event.clientX / viewportWidth) * 2 - 1
+      input.current.pointerY = (event.clientY / viewportHeight) * 2 - 1
     }
 
     readScroll()
     window.addEventListener('scroll', handleScroll, { passive: true })
-    window.addEventListener('resize', handleScroll, { passive: true })
+    window.addEventListener('resize', handleResize, { passive: true })
     window.addEventListener('pointermove', handlePointer, { passive: true })
 
     return () => {
       if (frame) cancelAnimationFrame(frame)
       window.removeEventListener('scroll', handleScroll)
-      window.removeEventListener('resize', handleScroll)
+      window.removeEventListener('resize', handleResize)
       window.removeEventListener('pointermove', handlePointer)
     }
   }, [targetRef])

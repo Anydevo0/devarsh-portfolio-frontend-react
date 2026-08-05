@@ -3,6 +3,7 @@ import { Outlet } from 'react-router'
 
 import { Footer } from './Footer'
 import { Header } from './Header'
+import { Horizon } from './Horizon'
 
 import { ChatWidget } from '@/components/chat/ChatWidget'
 import { useHashScroll } from '@/hooks/useHashScroll'
@@ -31,6 +32,7 @@ export function Layout() {
         <div className="relative z-0 flex-1">
           <Outlet />
         </div>
+        <Horizon />
         <Footer />
         <ChatWidget />
       </div>

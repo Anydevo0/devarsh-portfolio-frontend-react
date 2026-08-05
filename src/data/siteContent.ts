@@ -12,7 +12,7 @@ export const DEFAULT_SITE_CONTENT: SiteContent = {
     headline: 'Building scalable systems and intelligent AI applications.',
     intro:
       'I design and develop production-grade systems using Python, FastAPI, cloud platforms, and modern AI frameworks. My work focuses on scalable APIs, intelligent workflows, and LLM-powered applications.',
-    availability: 'Open to new opportunities',
+    greeting: 'Namaste 🙏',
     ctaPrimary: { label: 'View projects', href: '#projects' },
     ctaSecondary: { label: 'Contact me', href: '#contact' },
   },

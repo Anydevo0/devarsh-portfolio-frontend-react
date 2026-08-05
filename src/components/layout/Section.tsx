@@ -20,20 +20,27 @@ interface SectionProps {
  */
 export function Section({ id, route, title, lede, children, action }: SectionProps) {
   return (
-    <section id={id} className="relative mx-auto max-w-6xl scroll-mt-24 px-6 py-24 sm:py-32">
-      <Reveal>
-        <header className="flex flex-wrap items-end justify-between gap-6">
-          <div className="max-w-2xl">
-            <RouteLabel value={route} />
-            <h2 className="font-tech text-section text-lit mt-5 font-bold tracking-[-0.03em] text-balance">
-              {title}
-            </h2>
-            {lede && <p className="text-fog text-lede mt-5">{lede}</p>}
-          </div>
-          {action}
-        </header>
-      </Reveal>
-      <div className="mt-14">{children}</div>
+    // Transparent by design: the environment behind every section below the hero is
+    // one continuous layer owned by `PageAtmosphere`, so nothing is drawn here.
+    <section id={id} className="relative scroll-mt-24 py-24 sm:py-32">
+      {/* Padding belongs inside the measure, not on the section: with it outside, the
+          6xl box is centred in the already-padded width and every heading sits 24px
+          wider than the header's logo above it. */}
+      <div className="mx-auto max-w-6xl px-6">
+        <Reveal>
+          <header className="flex flex-wrap items-end justify-between gap-6">
+            <div className="max-w-2xl">
+              <RouteLabel value={route} />
+              <h2 className="font-tech text-section text-lit mt-5 font-bold tracking-[-0.03em] text-balance">
+                {title}
+              </h2>
+              {lede && <p className="text-fog text-lede mt-5">{lede}</p>}
+            </div>
+            {action}
+          </header>
+        </Reveal>
+        <div className="mt-14">{children}</div>
+      </div>
     </section>
   )
 }

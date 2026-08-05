@@ -4,14 +4,17 @@ import { Link, useLocation } from 'react-router'
 import { CloseIcon, DownloadIcon, MenuIcon } from '@/components/common/icons'
 import { API_BASE_URL } from '@/lib/env'
 
-/** Home-page sections, in the order they appear on the page. */
-const SECTIONS = [
-  { label: 'About', hash: '#about' },
-  { label: 'Skills', hash: '#skills' },
-  { label: 'Experience', hash: '#experience' },
-  { label: 'Work', hash: '#projects' },
-  { label: 'Writing', hash: '#writing' },
-  { label: 'Contact', hash: '#contact' },
+/**
+ * Two destinations, deliberately.
+ *
+ * The home page is one continuous argument — about, skills, experience, work,
+ * contact — and a nav listing all five duplicated the scroll rather than helping
+ * anyone. What is left is the one in-page anchor worth jumping to and the one place
+ * that is genuinely a different page.
+ */
+const NAV_ITEMS = [
+  { label: 'About Me', to: '/#about' },
+  { label: 'My Blogs', to: '/blog' },
 ]
 
 /**
@@ -61,18 +64,16 @@ export function Header() {
       <div className="mx-auto flex w-full max-w-6xl items-center justify-between gap-6 px-6 py-4">
         <Link
           to="/"
-          className="font-tech text-mist text-base font-bold tracking-tight whitespace-nowrap"
+          className="font-tech text-mist hover:text-pulse text-base font-semibold tracking-tight whitespace-nowrap transition-colors"
         >
-          Devarsh
-          <span className="text-pulse">.</span>
-          <span className="text-fog font-normal">chhatrala</span>
+          Devarsh Chhatrala
         </Link>
 
-        <nav aria-label="Sections" className="hidden items-center gap-1 lg:flex">
-          {SECTIONS.map(({ label, hash }) => (
-            <SectionLink key={hash} hash={hash} className="px-3 py-2">
+        <nav aria-label="Main" className="hidden items-center gap-1 sm:flex">
+          {NAV_ITEMS.map(({ label, to }) => (
+            <NavItem key={to} to={to} className="px-3.5 py-2">
               {label}
-            </SectionLink>
+            </NavItem>
           ))}
         </nav>
 
@@ -92,7 +93,7 @@ export function Header() {
             onClick={() => setIsMenuOpen((previous) => !previous)}
             aria-expanded={isMenuOpen}
             aria-label={isMenuOpen ? 'Close menu' : 'Open menu'}
-            className="text-mist glass-soft flex size-10 items-center justify-center rounded-full lg:hidden"
+            className="text-mist glass-soft flex size-10 items-center justify-center rounded-full sm:hidden"
           >
             {isMenuOpen ? <CloseIcon className="size-5" /> : <MenuIcon className="size-5" />}
           </button>
@@ -101,25 +102,25 @@ export function Header() {
 
       {isMenuOpen && (
         <nav
-          aria-label="Sections"
-          className="border-edge/80 bg-void/95 flex flex-col gap-1 border-t px-6 py-4 backdrop-blur-xl lg:hidden"
+          aria-label="Main"
+          className="border-edge/80 bg-void/95 flex flex-col gap-1 border-t px-6 py-4 backdrop-blur-xl sm:hidden"
         >
-          {SECTIONS.map(({ label, hash }) => (
-            <SectionLink
-              key={hash}
-              hash={hash}
+          {NAV_ITEMS.map(({ label, to }) => (
+            <NavItem
+              key={to}
+              to={to}
               onClick={() => setIsMenuOpen(false)}
               className="hover:bg-panel/60 rounded-lg px-3 py-3"
             >
               {label}
-            </SectionLink>
+            </NavItem>
           ))}
           <a
             href={`${API_BASE_URL}/resume`}
             target="_blank"
             rel="noopener noreferrer"
             onClick={() => setIsMenuOpen(false)}
-            className="text-fog hover:bg-panel/60 hover:text-pulse flex items-center gap-2 rounded-lg px-3 py-3 font-mono text-xs tracking-wide uppercase sm:hidden"
+            className="text-fog hover:bg-panel/60 hover:text-pulse flex items-center gap-2 rounded-lg px-3 py-3 font-mono text-xs tracking-wide uppercase"
           >
             <DownloadIcon className="size-3.5" />
             Resume
@@ -131,28 +132,27 @@ export function Header() {
 }
 
 /**
- * Links to a home-page section from anywhere on the site.
+ * A nav destination.
  *
- * A bare `#skills` only works if you are already on the home page — from /blog it
- * would set a fragment against a page that has no such element, and the nav would
- * silently do nothing. Routing through `/#skills` navigates home first, and
- * `useHashScroll` in Layout performs the scroll, since react-router does not restore
- * fragments on its own.
+ * `About Me` routes through `/#about` rather than a bare `#about`: from /blog a bare
+ * fragment would target an element that page does not have, and the link would
+ * silently do nothing. Going via the path navigates home first, and `useHashScroll`
+ * in Layout performs the scroll, since react-router does not restore fragments.
  */
-function SectionLink({
-  hash,
+function NavItem({
+  to,
   children,
   className = '',
   onClick,
 }: {
-  hash: string
+  to: string
   children: ReactNode
   className?: string
   onClick?: () => void
 }) {
   return (
     <Link
-      to={`/${hash}`}
+      to={to}
       onClick={onClick}
       className={`text-fog hover:text-mist font-mono text-xs tracking-wide whitespace-nowrap uppercase transition-colors ${className}`}
     >

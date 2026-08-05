@@ -32,7 +32,7 @@ const contentSchema = z.object({
     tagline: z.string().max(120),
     headline: z.string().min(1, 'Headline is required.').max(200),
     intro: z.string().min(1, 'Intro paragraph is required.').max(600),
-    availability: z.string().max(120),
+    greeting: z.string().max(120),
     ctaPrimary: ctaSchema,
     ctaSecondary: ctaSchema,
   }),
@@ -165,14 +165,14 @@ export function ContentEditorPage() {
           </div>
 
           <div>
-            <label htmlFor="hero-availability" className={labelClass}>
-              Availability status
+            <label htmlFor="hero-greeting" className={labelClass}>
+              Greeting
             </label>
             <input
-              id="hero-availability"
-              {...register('hero.availability')}
+              id="hero-greeting"
+              {...register('hero.greeting')}
               className={inputClass}
-              placeholder="Leave blank to hide the status dot"
+              placeholder="Leave blank to hide the greeting"
             />
           </div>
 
