@@ -31,6 +31,15 @@ const SCROLL_ROTATION = 0.4
 const POINTER_ROTATION = 0.045
 
 /**
+ * How tightly the rig and camera follow the pose while it is easing home.
+ *
+ * High, because the shape of the return is decided in `useSceneInput` and this only has
+ * to keep up with it. Damping at the ambient 3.2 instead put a second lag on top of an
+ * already-eased value and turned a 0.4s return into nearly a second of drift.
+ */
+const RETURN_TRACKING = 12
+
+/**
  * The drag sweep, and the one number in this file worth arguing about.
  *
  * Sign, derived rather than guessed. three.js rotates a point (x, z) about +Y to
@@ -119,13 +128,16 @@ export function WorkstationScene({
     const group = rig.current
     if (!group) return
 
-    const { scroll, pointerX, pointerY, dragYaw, dragPitch, isDragging, hasDragged } =
+    const { scroll, pointerX, pointerY, dragYaw, dragPitch, isDragging, isReturning } =
       input.current
     const camera = state.camera
-    // Ambient motion, and only while the scene is still ambient. Once the visitor has
-    // posed the rig by hand, scroll and cursor stop writing to yaw entirely.
-    const ambientYaw = hasDragged ? 0 : scroll * SCROLL_ROTATION + pointerX * POINTER_ROTATION
-    const ambientPitch = hasDragged ? 0 : pointerY * 0.014
+    // Ambient motion, and only while the scene is still ambient. It stands down while
+    // the visitor is posing the rig and stays down until it is home again — a parallax
+    // nudge arriving mid-return would pull against the thing trying to settle. Once the
+    // rig is back at rest this resumes, so scrolling still turns the scene afterwards.
+    const driven = isDragging || isReturning
+    const ambientYaw = driven ? 0 : scroll * SCROLL_ROTATION + pointerX * POINTER_ROTATION
+    const ambientPitch = driven ? 0 : pointerY * 0.014
 
     // Where the camera sits for a given elevation, as a plain function of the polar
     // constants above. Writes straight into the camera to keep the loop allocation-free.
@@ -169,9 +181,14 @@ export function WorkstationScene({
     // Pinned while the pointer is down, eased once it is not. Damping a value the
     // visitor is actively holding is what made the model trail their hand; the whole
     // point of easing is to smooth motion they are *not* driving.
+    //
+    // The return is already an ease-out by the time it arrives here — `useSceneInput`
+    // shapes it — so this tracks it tightly rather than damping it a second time.
+    // Leaving it at the ambient rate stretched a 0.4s return into nearly a second and
+    // lost the shape of the curve underneath.
     group.rotation.y = isDragging
       ? targetRotation
-      : THREE.MathUtils.damp(group.rotation.y, targetRotation, 3.2, delta)
+      : THREE.MathUtils.damp(group.rotation.y, targetRotation, isReturning ? RETURN_TRACKING : 3.2, delta)
     group.rotation.x = THREE.MathUtils.damp(group.rotation.x, ambientPitch, 3.2, delta)
 
     // Camera parallax, plus a slow pull-back as the hero scrolls away so the scene
@@ -186,9 +203,15 @@ export function WorkstationScene({
       hasDragged ? 0 : -pointerY * 0.13,
       scroll * 0.18,
     )
-    camera.position.x = THREE.MathUtils.damp(camera.position.x, home.x, 2.4, delta)
-    camera.position.y = THREE.MathUtils.damp(camera.position.y, home.y, 2.4, delta)
-    camera.position.z = THREE.MathUtils.damp(camera.position.z, home.z + scroll * 0.35, 2.4, delta)
+    const cameraTracking = isReturning ? RETURN_TRACKING : 2.4
+    camera.position.x = THREE.MathUtils.damp(camera.position.x, home.x, cameraTracking, delta)
+    camera.position.y = THREE.MathUtils.damp(camera.position.y, home.y, cameraTracking, delta)
+    camera.position.z = THREE.MathUtils.damp(
+      camera.position.z,
+      home.z + scroll * 0.35,
+      cameraTracking,
+      delta,
+    )
     camera.lookAt(CAMERA_TARGET)
   })
 

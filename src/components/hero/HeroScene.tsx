@@ -43,6 +43,9 @@ export function HeroScene({ sectionRef }: { sectionRef: RefObject<HTMLElement | 
     yawLimits: YAW_LIMITS,
     pitchLimits: PITCH_LIMITS,
     yawOvershoot: YAW_OVERSHOOT,
+    // Reduced motion keeps the control and loses the flourish: the rig still goes home
+    // on release, it just arrives on the frame the visitor lets go instead of easing.
+    easeReturn: !prefersReducedMotion,
   })
 
   const handleToggleLight = useCallback(() => {

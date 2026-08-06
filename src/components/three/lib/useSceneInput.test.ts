@@ -52,7 +52,7 @@ describe('useSceneInput drag gesture', () => {
     onFirstDrag = vi.fn()
   })
 
-  function mount() {
+  function mount(easeReturn = true) {
     const ref = { current: section }
     return renderHook(() =>
       useSceneInput(ref, {
@@ -61,6 +61,7 @@ describe('useSceneInput drag gesture', () => {
         yawLimits: YAW_LIMITS,
         pitchLimits: PITCH_LIMITS,
         yawOvershoot: YAW_OVERSHOOT,
+        easeReturn,
       }),
     )
   }
@@ -81,7 +82,7 @@ describe('useSceneInput drag gesture', () => {
     expect(result.current.input.current.dragYaw).toBe(RESTING)
     expect(result.current.input.current.dragPitch).toBe(0)
     expect(result.current.input.current.isDragging).toBe(false)
-    expect(result.current.input.current.hasDragged).toBe(false)
+    expect(result.current.input.current.isReturning).toBe(false)
   })
 
   it('ignores movement below the slop threshold, so the wall switch stays clickable', () => {
@@ -101,7 +102,6 @@ describe('useSceneInput drag gesture', () => {
 
     const values = result.current.input.current
     expect(values.isDragging).toBe(true)
-    expect(values.hasDragged).toBe(true)
     expect(section.setPointerCapture).toHaveBeenCalledWith(1)
     // Dragging right subtracts: the gesture orbits the viewpoint rather than shoving
     // the object, so the model turns to its left.
@@ -141,22 +141,112 @@ describe('useSceneInput drag gesture', () => {
     release({ clientX: 100, clientY: 300 })
     expect(result.current.input.current.dragYaw).toBe(YAW_MAX)
     expect(result.current.input.current.isDragging).toBe(false)
+    // The journey home starts from inside the range, not from the stretched pose.
+    expect(result.current.input.current.isReturning).toBe(true)
   })
 
-  it('continues from where the previous gesture left off', () => {
-    const { result } = mount()
-    press(section, { clientX: 500, clientY: 300 })
-    move({ clientX: 560, clientY: 300 })
-    release({ clientX: 560, clientY: 300 })
-    const afterFirst = result.current.input.current.dragYaw
+  it('eases the model back to its default rotation once released', async () => {
+    vi.useFakeTimers()
+    try {
+      const { result } = mount()
+      press(section, { clientX: 500, clientY: 300 })
+      move({ clientX: 700, clientY: 380 })
+      release({ clientX: 700, clientY: 380 })
 
-    press(section, { clientX: 200, clientY: 300 })
-    move({ clientX: 260, clientY: 300 })
-    expect(result.current.input.current.dragYaw).toBeCloseTo(afterFirst - (60 / SWEEP) * YAW_SPAN, 5)
+      const turned = result.current.input.current.dragYaw
+      expect(turned).not.toBeCloseTo(RESTING, 3)
+      expect(result.current.input.current.isReturning).toBe(true)
+
+      // Part-way: on its way back, but not yet arrived. An ease, not a snap.
+      await vi.advanceTimersByTimeAsync(100)
+      const partway = result.current.input.current.dragYaw
+      expect(Math.abs(partway - RESTING)).toBeLessThan(Math.abs(turned - RESTING))
+      expect(partway).not.toBe(RESTING)
+
+      await vi.advanceTimersByTimeAsync(1500)
+      expect(result.current.input.current.dragYaw).toBe(RESTING)
+      expect(result.current.input.current.dragPitch).toBe(0)
+      expect(result.current.input.current.isReturning).toBe(false)
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  it('returns the camera elevation home as well, not just the model', async () => {
+    vi.useFakeTimers()
+    try {
+      const { result } = mount()
+      press(section, { clientX: 500, clientY: 300 })
+      move({ clientX: 500, clientY: 420 })
+      expect(result.current.input.current.dragPitch).toBeLessThan(0)
+
+      release({ clientX: 500, clientY: 420 })
+      await vi.advanceTimersByTimeAsync(1500)
+      expect(result.current.input.current.dragPitch).toBe(0)
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  it('drives a frame for each step of the return, so a sleeping loop redraws it', async () => {
+    vi.useFakeTimers()
+    try {
+      const { result } = mount()
+      const requestFrame = vi.fn()
+      result.current.setFrameRequest(requestFrame)
+
+      press(section, { clientX: 500, clientY: 300 })
+      move({ clientX: 700, clientY: 300 })
+      release({ clientX: 700, clientY: 300 })
+      requestFrame.mockClear()
+
+      await vi.advanceTimersByTimeAsync(120)
+      expect(requestFrame.mock.calls.length).toBeGreaterThan(1)
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  it('catches the model where it is when grabbed mid-return', async () => {
+    vi.useFakeTimers()
+    try {
+      const { result } = mount()
+      press(section, { clientX: 500, clientY: 300 })
+      move({ clientX: 700, clientY: 300 })
+      release({ clientX: 700, clientY: 300 })
+
+      await vi.advanceTimersByTimeAsync(80)
+      const caught = result.current.input.current.dragYaw
+
+      press(section, { clientX: 300, clientY: 300 })
+      expect(result.current.input.current.isReturning).toBe(false)
+      // The return has stopped dead: nothing moves until the pointer does.
+      await vi.advanceTimersByTimeAsync(200)
+      expect(result.current.input.current.dragYaw).toBe(caught)
+
+      // And the new gesture offsets from there rather than from the resting pose.
+      move({ clientX: 360, clientY: 300 })
+      expect(result.current.input.current.dragYaw).toBeCloseTo(caught - (60 / SWEEP) * YAW_SPAN, 5)
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  it('puts the model home without animating it when motion is reduced', () => {
+    const { result } = mount(false)
+    press(section, { clientX: 500, clientY: 300 })
+    move({ clientX: 700, clientY: 380 })
+    expect(result.current.input.current.dragYaw).not.toBe(RESTING)
+
+    release({ clientX: 700, clientY: 380 })
+    // Home on the frame they let go, with no return animation to run.
+    expect(result.current.input.current.dragYaw).toBe(RESTING)
+    expect(result.current.input.current.dragPitch).toBe(0)
+    expect(result.current.input.current.isReturning).toBe(false)
   })
 
   it('announces the first drag exactly once', () => {
-    const { result } = mount()
+    mount()
     press(section, { clientX: 500, clientY: 300 })
     move({ clientX: 560, clientY: 300 })
     release({ clientX: 560, clientY: 300 })
@@ -165,7 +255,6 @@ describe('useSceneInput drag gesture', () => {
     move({ clientX: 620, clientY: 300 })
 
     expect(onFirstDrag).toHaveBeenCalledTimes(1)
-    expect(result.current.input.current.hasDragged).toBe(true)
   })
 
   it('never starts a drag from a press on something that owns its own click', () => {

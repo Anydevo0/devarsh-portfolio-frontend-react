@@ -11,21 +11,30 @@
  * Why these particular numbers is explained where they are used, in `WorkstationScene`.
  */
 
-/**
- * Where the rig sits before any input — the midpoint of the range, deliberately.
- *
- * It used to sit at -0.1, which was where the scene had always rested, and that left
- * ~72° of travel one way against ~24° the other. The same gesture therefore did wildly
- * different amounts depending on direction, and pulling right ran out after about
- * 140px and went dead — which reads as a broken control rather than as a limit. The
- * asymmetry was not a tuning problem: the face is not modelled, so the face-ward stop
- * cannot move, and the only way to balance the range was to move the resting pose into
- * the middle of it. Costs the old first frame; buys a control that behaves the same
- * whichever way it is pulled.
- */
 export const YAW_MIN = -0.53
 export const YAW_MAX = 1.15
-export const BASE_ROTATION = (YAW_MIN + YAW_MAX) / 2
+
+/**
+ * Where the rig sits before any input, and where it returns to once a drag ends.
+ *
+ * Off the midpoint on purpose. Centring it — which is what this briefly was — put the
+ * resting pose at θ ≈ 0.31, and that is dead behind the figure: the camera looking
+ * straight up the spine, with the lamp and the wall switch both swung round to near the
+ * middle of frame where the monitor already is. Symmetrical to drag, and the wrong
+ * first impression.
+ *
+ * -0.1 is the back three-quarter the scene was actually composed around. It carries the
+ * switch out to about x = +0.67 in view space, clear to the right of the monitor and
+ * above its top edge, which is what makes the lamp control findable without the page
+ * having to point at it.
+ *
+ * The cost is that travel is lopsided again: ~0.43 rad toward the face-ward stop
+ * against ~1.25 the other way. That asymmetry is exactly what centring was meant to
+ * fix, and it is affordable now only because releasing returns the rig here instead of
+ * leaving it wherever the gesture ended. Nobody lives at the far end of the range any
+ * more, so running out of travel there costs a moment rather than the rest of the visit.
+ */
+export const BASE_ROTATION = -0.1
 
 /**
  * How far past a stop the rig can be pulled, in radians (~7°).
