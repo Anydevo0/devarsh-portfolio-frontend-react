@@ -199,8 +199,8 @@ export function WorkstationScene({
     // rather than the model appearing to move by itself.
     const home = placeCamera(
       ORBIT_ELEVATION + dragPitch,
-      hasDragged ? 0 : pointerX * 0.22,
-      hasDragged ? 0 : -pointerY * 0.13,
+      driven ? 0 : pointerX * 0.22,
+      driven ? 0 : -pointerY * 0.13,
       scroll * 0.18,
     )
     const cameraTracking = isReturning ? RETURN_TRACKING : 2.4

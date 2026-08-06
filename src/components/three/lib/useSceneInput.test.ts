@@ -1,5 +1,5 @@
 import { renderHook } from '@testing-library/react'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { type Mock, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { PITCH_LIMITS, YAW_LIMITS, YAW_MAX, YAW_OVERSHOOT } from './rigLimits'
 import { useSceneInput } from './useSceneInput'
@@ -35,7 +35,7 @@ describe('useSceneInput drag gesture', () => {
   let section: HTMLElement
   let child: HTMLElement
   let button: HTMLButtonElement
-  let onFirstDrag: ReturnType<typeof vi.fn>
+  let onFirstDrag: Mock<() => void>
 
   beforeEach(() => {
     section = document.createElement('section')
@@ -49,7 +49,7 @@ describe('useSceneInput drag gesture', () => {
     section.releasePointerCapture = vi.fn()
     section.hasPointerCapture = vi.fn().mockReturnValue(true)
 
-    onFirstDrag = vi.fn()
+    onFirstDrag = vi.fn<() => void>()
   })
 
   function mount(easeReturn = true) {
