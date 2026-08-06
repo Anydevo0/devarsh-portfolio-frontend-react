@@ -25,12 +25,23 @@ const SCREEN_Y = 1.14
 
 /**
  * The ultrawide. The panel is a slice of a cylinder rather than a flat plane, so it
- * genuinely curves toward the viewer the way the real thing does — which is what
- * sells the perspective once the scroll rig rotates the scene off-axis.
+ * genuinely curves the way the real thing does — which is what sells the perspective
+ * once the rig rotates the scene off-axis.
  *
- * The bezel is a second, slightly smaller-radius slice sitting just behind the panel
- * and extending a little further in both directions, so its edge reads as a frame
- * without needing a separate modelled surround.
+ * Which *way* it curves is the subtle part, and it was wrong. A curved monitor is
+ * concave: it wraps around the person sitting at it, so the centre of curvature is on
+ * *their* side of the glass. Putting the cylinder's axis behind the panel — the
+ * obvious reading of "push the group back by the radius" — builds the opposite solid,
+ * one that bulges out at the viewer, and the error is invisible dead-on and obvious
+ * the moment the scene turns. The axis therefore sits in front of the panel, at
+ * `SCREEN_Z + CURVE_RADIUS`, and the visible slice is the far side of that cylinder,
+ * centred on θ = π.
+ *
+ * Rendering the far side means the viewer is looking at the surface's *inside*, whose
+ * normals point away from them — so the panel and its bezel need `BackSide` materials,
+ * and the screen texture needs mirroring back (see `materials`). The bezel is a second
+ * slice at a slightly *larger* radius, which is what now puts it behind the panel
+ * rather than in front of it.
  */
 export function Monitor({ palette, quality, animate }: MonitorProps) {
   const radialSegments = quality === 'high' ? 48 : 20
@@ -48,19 +59,20 @@ export function Monitor({ palette, quality, animate }: MonitorProps) {
 
   return (
     <group>
-      {/* Cylinder slices are centred on their own axis, so the group is pushed back by
-          the curvature radius to bring the front of the arc to SCREEN_Z. */}
-      <group position={[0, SCREEN_Y, SCREEN_Z - CURVE_RADIUS]}>
-        <Part material={palette.chassis}>
+      {/* Cylinder slices are centred on their own axis, so the group sits a radius in
+          *front* of the panel and the visible arc is taken from the far side, at θ = π.
+          That is what makes the surface concave to the viewer. */}
+      <group position={[0, SCREEN_Y, SCREEN_Z + CURVE_RADIUS]}>
+        <Part material={palette.screenShell}>
           <cylinderGeometry
             args={[
-              CURVE_RADIUS - 0.04,
-              CURVE_RADIUS - 0.04,
+              CURVE_RADIUS + 0.04,
+              CURVE_RADIUS + 0.04,
               SCREEN_HEIGHT + 0.075,
               radialSegments,
               1,
               true,
-              -(SCREEN_ARC + 0.045) / 2,
+              Math.PI - (SCREEN_ARC + 0.045) / 2,
               SCREEN_ARC + 0.045,
             ]}
           />
@@ -75,7 +87,7 @@ export function Monitor({ palette, quality, animate }: MonitorProps) {
               radialSegments,
               1,
               true,
-              -SCREEN_ARC / 2,
+              Math.PI - SCREEN_ARC / 2,
               SCREEN_ARC,
             ]}
           />

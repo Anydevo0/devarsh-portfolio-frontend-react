@@ -22,6 +22,13 @@ export interface MaterialPalette {
   deskTop: THREE.MeshStandardMaterial
   deskFrame: THREE.MeshStandardMaterial
   chassis: THREE.MeshStandardMaterial
+  /**
+   * The monitor's curved bezel. Same look as `chassis`, but rendered inside-out — the
+   * panel is a concave slice, so its frame is seen from the inside too. It cannot just
+   * be `chassis` with a different `side`, because `chassis` is shared with the
+   * keyboard, the lamp and the deskware, and flipping it would turn those inside out.
+   */
+  screenShell: THREE.MeshStandardMaterial
   screen: THREE.MeshBasicMaterial
   keycap: THREE.MeshStandardMaterial
   chairShell: THREE.MeshStandardMaterial
@@ -48,6 +55,8 @@ export interface MaterialPalette {
   switchPlate: THREE.MeshStandardMaterial
   switchRocker: THREE.MeshStandardMaterial
   switchLed: THREE.MeshStandardMaterial
+  /** The LED's own bloom. Owned per-instance — `WallSwitch` animates its opacity. */
+  switchLedGlow: THREE.SpriteMaterial
   switchLabel: THREE.MeshBasicMaterial
   switchHalo: THREE.SpriteMaterial
   room: THREE.MeshStandardMaterial
@@ -89,6 +98,12 @@ function emissive(color: string, intensity: number) {
 
 export function createMaterialPalette(quality: SceneQuality): MaterialPalette {
   const codeTexture = createCodeTexture(quality)
+  // The panel is drawn from behind (see `Monitor`), which mirrors whatever is mapped
+  // onto it. Flipping the sampled range back along u puts the code the right way round
+  // without touching the canvas the texture was drawn on. `wrapS` is ClampToEdge and
+  // stays valid: u' = 1 − u never leaves 0…1.
+  codeTexture.repeat.x = -1
+  codeTexture.offset.x = 1
   const weave = createMeshWeaveTexture()
   const glowTexture = createGlowTexture()
   const latte = createLatteTexture()
@@ -112,10 +127,16 @@ export function createMaterialPalette(quality: SceneQuality): MaterialPalette {
     deskTop: standard('#161b24', 0.62, 0.12),
     deskFrame: standard('#0c1017', 0.45, 0.55),
     chassis: standard('#0e1219', 0.5, 0.35),
+    screenShell: standard('#0e1219', 0.5, 0.35, { side: THREE.BackSide }),
 
     // Unlit on purpose: the screen is the scene's brightest surface and must not dim
-    // as the rig rotates it away from the key light.
-    screen: new THREE.MeshBasicMaterial({ map: codeTexture, toneMapped: false }),
+    // as the rig rotates it away from the key light. `BackSide` because the panel is a
+    // concave slice presented from inside — see `Monitor`.
+    screen: new THREE.MeshBasicMaterial({
+      map: codeTexture,
+      toneMapped: false,
+      side: THREE.BackSide,
+    }),
 
     keycap: standard('#1c232f', 0.72, 0.05),
     chairShell: standard('#141922', 0.68, 0.18),
@@ -174,9 +195,24 @@ export function createMaterialPalette(quality: SceneQuality): MaterialPalette {
 
     switchPlate: standard('#cfd6e2', 0.55, 0.05, { fog: false }),
     switchRocker: standard('#eef2f8', 0.4, 0.03, { fog: false }),
+    // The indicator reads at ~6m through fog-exempt materials, so it is the one place
+    // in the scene where "correct" exposure loses to legibility. Idle sits high enough
+    // to be an obviously live piece of hardware rather than a dark speck; `WallSwitch`
+    // drives it far past 1 when the lamp is on, where `toneMapped: false` lets the core
+    // clip to white and the sprite below supplies the green that the clipping eats.
     switchLed: standard('#3ddc97', 0.4, 0, {
       emissive: new THREE.Color('#3ddc97'),
-      emissiveIntensity: 0.35,
+      emissiveIntensity: 0.95,
+      toneMapped: false,
+      fog: false,
+    }),
+    switchLedGlow: new THREE.SpriteMaterial({
+      map: glowTexture,
+      color: '#3ddc97',
+      blending: THREE.AdditiveBlending,
+      transparent: true,
+      opacity: 0.28,
+      depthWrite: false,
       toneMapped: false,
       fog: false,
     }),
@@ -192,7 +228,7 @@ export function createMaterialPalette(quality: SceneQuality): MaterialPalette {
       color: '#5b7fff',
       blending: THREE.AdditiveBlending,
       transparent: true,
-      opacity: 0.2,
+      opacity: 0.3,
       depthWrite: false,
       toneMapped: false,
       fog: false,

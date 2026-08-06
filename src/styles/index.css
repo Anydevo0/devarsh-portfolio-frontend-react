@@ -76,30 +76,18 @@ body {
 }
 
 /* One focus treatment for the whole public site — a pulse ring offset from the
-   element, visible against every surface value in the palette. */
+   element, visible against every surface value in the palette.
+
+   No `border-radius` here, deliberately. Setting one reshapes the element itself
+   rather than the ring: this selector is (0,2,0) and every Tailwind radius utility is
+   (0,1,0), so a 0.375rem declaration silently squared off every pill and rounded card
+   on the site the moment it took focus — most visibly the chat field, which is
+   focused for as long as anyone is typing into it. Modern browsers already draw
+   `outline` following the element's own corners, so the ring follows a pill around a
+   pill and a rectangle around a rectangle without being told. */
 .site-shell :focus-visible {
   outline: 2px solid var(--color-pulse);
   outline-offset: 3px;
-  border-radius: 0.375rem;
-}
-
-/* The hero's 3D layer, which can be grabbed and turned. See `useSceneDrag`.
-
-   `pan-y` is the whole mobile story: it hands vertical gestures to the browser and
-   keeps horizontal ones for the scene. Below `lg` the canvas covers the entire hero,
-   so `touch-action: none` would leave a visitor unable to scroll off the first screen.
-
-   `cursor` inherits, so the canvas picks `grab` up from here — which lets the wall
-   switch override it with `pointer` by writing to the canvas directly, and lets it
-   hand the grab cursor back by simply removing that inline value again. */
-.scene-drag {
-  cursor: grab;
-  touch-action: pan-y;
-}
-.scene-drag[data-dragging='true'],
-.scene-drag[data-dragging='true'] canvas {
-  cursor: grabbing;
-  user-select: none;
 }
 
 /* ---------------------------------------------------------------------------
@@ -215,6 +203,32 @@ body {
     transparent 72%,
     var(--color-void) 100%
   );
+}
+
+/* Two things inside the hero want to own the cursor: the whole canvas can be dragged
+   to turn the model, and the wall switch painted inside it can be clicked. Resolved
+   here rather than by both components writing `document.body.style.cursor`, because
+   that is last-writer-wins and the last writer is whichever pointer event happened to
+   fire second. The switch is the smaller, more specific target, so it takes precedence
+   — `WallSwitch` announces itself with a data attribute on <body> and this rule reads
+   it. The `grabbing` state is an inline style set for the length of the gesture, which
+   beats both of these without needing a third rule. */
+.scene-grab {
+  cursor: grab;
+}
+body[data-scene-hit='switch'] .scene-grab {
+  cursor: pointer;
+}
+/* `.scene-grab` is the whole hero section, so the grab cursor would otherwise inherit
+   straight down onto the CTAs and the social links sitting over the scene. Those keep
+   their own affordance — a press on one of them is a click, never a drag, which is the
+   same list `useSceneInput` refuses to start a gesture on. Text keeps its caret for the
+   same reason: the copy is still selectable until a drag actually begins. */
+.scene-grab :where(a, button, input, textarea, select, summary, [role='button']) {
+  cursor: pointer;
+}
+.scene-grab :where(h1, h2, h3, p, li, span) {
+  cursor: auto;
 }
 
 /* Ambient colour behind the page — two slow, very large blurred pools. Pure CSS so
@@ -591,6 +605,24 @@ body {
 }
 .animate-float-soft {
   animation: float-soft 5s ease-in-out infinite;
+}
+
+/* The hero's "click & drag" hint, breathing while it is still unheeded. Opacity only,
+   and never to zero — a hint that blinks out competes with the scene behind it, and
+   the point is to be noticed once, not to keep pulling the eye off the model. The
+   component stops applying this class the moment the visitor drags, and the fade-out
+   that replaces it is a transition on the wrapper, so the two never collide. */
+@keyframes hint-breathe {
+  0%,
+  100% {
+    opacity: 0.5;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+.animate-hint-breathe {
+  animation: hint-breathe 3.6s ease-in-out infinite;
 }
 
 /* Terminal caret for the hero's mono line. */

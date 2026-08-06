@@ -3,6 +3,7 @@ import { useEffect, useMemo, useRef } from 'react'
 import * as THREE from 'three'
 
 import { createMaterialPalette } from './lib/materials'
+import { BASE_ROTATION, YAW_MAX, YAW_MIN, YAW_OVERSHOOT } from './lib/rigLimits'
 import type { SceneQuality } from './lib/textures'
 import type { SceneInput } from './lib/useSceneInput'
 import { Chair } from './parts/Chair'
@@ -16,8 +17,6 @@ import { Monitor } from './parts/Monitor'
 import { Room } from './parts/Room'
 import { WallSwitch } from './parts/WallSwitch'
 
-/** Where the rig sits before any scroll. Slightly off-axis so the desk reads in perspective. */
-const BASE_ROTATION = -0.1
 /**
  * Total yaw travelled across the hero, in radians — about 23°.
  *
@@ -28,17 +27,41 @@ const BASE_ROTATION = -0.1
  * "premium product page" motion the brief asks for.
  */
 const SCROLL_ROTATION = 0.4
+/** How much the cursor alone nudges the rig. Small — it is parallax, not control. */
+const POINTER_ROTATION = 0.045
 
 /**
- * How far a drag can turn the rig either way, in radians — about 26°.
+ * The drag sweep, and the one number in this file worth arguing about.
  *
- * Bounded for the same reason `SCROLL_ROTATION` is small: the figure has no face. At
- * rest the camera sits 130° off their facing direction, so this is the most that can
- * be given up before the view swings toward a profile and starts asking for features
- * that were never modelled. It is applied as a soft limit rather than a clamp, so the
- * end of the range is felt as resistance instead of a wall.
+ * Sign, derived rather than guessed. three.js rotates a point (x, z) about +Y to
+ * (x·cosθ + z·sinθ, −x·sinθ + z·cosθ). The camera sits out at +x/+z looking back at
+ * the origin, so the face of the rig nearest the viewer is the one at +z. Take a point
+ * there, (0, 0, r): its screen-x after the rotation is r·sinθ. Increasing θ therefore
+ * swings the near side toward screen-right — the model turning to *its* right. The
+ * gesture reads as orbiting the viewpoint rather than shoving the object, so a drag
+ * right has to turn the model left: rightward travel subtracts. That inversion lives
+ * in `useSceneInput`, which is the only thing that writes `dragYaw`.
+ *
+ * The range is anchored on the back of the figure, not on the front. With the camera
+ * where it is, the resting pose sits about 156° off the figure's facing direction —
+ * a back three-quarter — and dead-behind is another 18° round, at θ ≈ 0.31. Centring
+ * ~96° of travel on *that* keeps both ends roughly 48° off the spine, which is as far
+ * as this model can be turned before the trouble starts: the face is deliberately not
+ * modelled (see `Engineer`), so anything approaching a profile puts a blank head on
+ * screen. Verified in a browser rather than reasoned about — at 60° the head reads as
+ * featureless, at 30° it still reads as a person seen from behind.
+ *
+ * The resting pose is deliberately *not* the midpoint. It is where the hero has always
+ * sat, and moving it to centre the range would have changed the page's first frame.
+ *
+ * Vertical drag orbits the camera by ±16° instead of pitching the rig. Tilting the
+ * group itself is what the cursor parallax does, and it is fine at the 0.8° it uses —
+ * but at 16° it swings the floor and the back wall through frame, because this is a
+ * room rather than an object on a turntable. Moving the camera along a vertical arc
+ * changes the viewing angle and leaves the room level.
+ *
+ * The numbers themselves are in `lib/rigLimits`, which the hero also reads.
  */
-const MAX_DRAG_ROTATION = 0.45
 
 /**
  * The canvas occupies the right ~62% of the hero, so its aspect is close to square
@@ -48,6 +71,23 @@ const MAX_DRAG_ROTATION = 0.45
  */
 const CAMERA_HOME = new THREE.Vector3(1.9, 1.68, 4.35)
 const CAMERA_TARGET = new THREE.Vector3(0.02, 1.0, 0)
+
+/**
+ * `CAMERA_HOME` re-expressed as a polar offset from the target, so the vertical drag
+ * can move along an arc instead of straight up. Precomputed once: these are three
+ * trig calls that would otherwise run every frame to produce the same answer.
+ */
+const ORBIT_RADIUS = CAMERA_HOME.distanceTo(CAMERA_TARGET)
+const ORBIT_AZIMUTH = Math.atan2(CAMERA_HOME.x - CAMERA_TARGET.x, CAMERA_HOME.z - CAMERA_TARGET.z)
+const ORBIT_ELEVATION = Math.asin((CAMERA_HOME.y - CAMERA_TARGET.y) / ORBIT_RADIUS)
+/**
+ * Absolute floor and ceiling for the camera's elevation. The floor is what stops a
+ * downward drag from burrowing under the desk and looking at the scene through it;
+ * the ceiling stops the camera climbing far enough to look over the monitor's top
+ * edge, where the room runs out of ceiling to be seen against.
+ */
+const ELEVATION_MIN = 0
+const ELEVATION_MAX = 0.44
 
 interface WorkstationSceneProps {
   quality: SceneQuality
@@ -69,16 +109,6 @@ export function WorkstationScene({
   showSwitchHint,
 }: WorkstationSceneProps) {
   const rig = useRef<THREE.Group>(null)
-  /**
-   * The scroll contribution to yaw, smoothed on its own channel.
-   *
-   * Kept separate from the drag offset rather than damping one combined target,
-   * because the two want opposite feels — scroll trails the page with a long ease,
-   * while a drag has to sit under the pointer. Composing them additively is also what
-   * lets "return to default" mean "return to the pose scroll asks for" instead of the
-   * two inputs fighting over a single value.
-   */
-  const scrollYaw = useRef(0)
 
   // One palette for the whole scene. Rebuilt only if the device tier changes, which
   // in practice means a resize across the tablet breakpoint.
@@ -89,12 +119,35 @@ export function WorkstationScene({
     const group = rig.current
     if (!group) return
 
-    const { scroll, pointerX, pointerY, dragRaw } = input.current
+    const { scroll, pointerX, pointerY, dragYaw, dragPitch, isDragging, hasDragged } =
+      input.current
     const camera = state.camera
+    // Ambient motion, and only while the scene is still ambient. Once the visitor has
+    // posed the rig by hand, scroll and cursor stop writing to yaw entirely.
+    const ambientYaw = hasDragged ? 0 : scroll * SCROLL_ROTATION + pointerX * POINTER_ROTATION
+    const ambientPitch = hasDragged ? 0 : pointerY * 0.014
+
+    // Where the camera sits for a given elevation, as a plain function of the polar
+    // constants above. Writes straight into the camera to keep the loop allocation-free.
+    function placeCamera(elevation: number, parallaxX: number, parallaxY: number, lift: number) {
+      const clamped = THREE.MathUtils.clamp(elevation, ELEVATION_MIN, ELEVATION_MAX)
+      const horizontal = ORBIT_RADIUS * Math.cos(clamped)
+      return {
+        x: CAMERA_TARGET.x + Math.sin(ORBIT_AZIMUTH) * horizontal + parallaxX,
+        y: CAMERA_TARGET.y + ORBIT_RADIUS * Math.sin(clamped) + parallaxY + lift,
+        z: CAMERA_TARGET.z + Math.cos(ORBIT_AZIMUTH) * horizontal,
+      }
+    }
 
     if (!animate) {
-      group.rotation.y = BASE_ROTATION
-      camera.position.copy(CAMERA_HOME)
+      // Drag still works here, and deliberately without damping: reduced motion asks
+      // for no animation, not for no controls. Following the pointer exactly is the
+      // most literal reading of the request — nothing moves that the visitor is not
+      // moving with their own hand, and there is no settle after they let go, which
+      // also means `frameloop="demand"` needs exactly one frame per pointer event.
+      group.rotation.y = THREE.MathUtils.clamp(dragYaw, YAW_MIN, YAW_MAX)
+      const home = placeCamera(ORBIT_ELEVATION + dragPitch, 0, 0, 0)
+      camera.position.set(home.x, home.y, home.z)
       camera.lookAt(CAMERA_TARGET)
       return
     }
@@ -102,38 +155,40 @@ export function WorkstationScene({
     // MathUtils.damp is frame-rate independent, so the easing feels identical at 60
     // and 144 Hz. A plain lerp with a fixed alpha would not — it would ease roughly
     // twice as fast on a 120 Hz display.
-    scrollYaw.current = THREE.MathUtils.damp(
-      scrollYaw.current,
-      scroll * SCROLL_ROTATION,
-      3.2,
-      delta,
+    // Ambient yaw writes into the same value the drag does, so clamping the drag alone
+    // would not be a guarantee — small contributions can still add up past the end of
+    // the arc. The clamp is applied to the sum, which is the only value that reaches
+    // the rig. `dragYaw` may sit slightly outside the range while the visitor is
+    // stretching the rubber band, so the stops open by exactly that much and no more.
+    const stretch = isDragging ? YAW_OVERSHOOT : 0
+    const targetRotation = THREE.MathUtils.clamp(
+      dragYaw + ambientYaw,
+      YAW_MIN - stretch,
+      YAW_MAX + stretch,
     )
-
-    // Soft limit: linear near the centre, so the drag tracks the pointer one-to-one
-    // through the range a visitor will actually use, then asymptotic at the edges
-    // rather than stopping dead against a clamp. `useSceneDrag` owns the raw value,
-    // including easing it back to zero on release, so there is nothing to smooth here.
-    const dragYaw = MAX_DRAG_ROTATION * Math.tanh(dragRaw / MAX_DRAG_ROTATION)
-
-    // Set outright rather than damped — both channels arrive pre-smoothed, and damping
-    // the sum again would put a second lag between the pointer and the model.
-    group.rotation.y = BASE_ROTATION + scrollYaw.current + dragYaw
+    // Pinned while the pointer is down, eased once it is not. Damping a value the
+    // visitor is actively holding is what made the model trail their hand; the whole
+    // point of easing is to smooth motion they are *not* driving.
+    group.rotation.y = isDragging
+      ? targetRotation
+      : THREE.MathUtils.damp(group.rotation.y, targetRotation, 3.2, delta)
+    group.rotation.x = THREE.MathUtils.damp(group.rotation.x, ambientPitch, 3.2, delta)
 
     // Camera parallax, plus a slow pull-back as the hero scrolls away so the scene
-    // recedes rather than simply sliding off the top of the viewport.
-    camera.position.x = THREE.MathUtils.damp(
-      camera.position.x,
-      CAMERA_HOME.x + pointerX * 0.22,
-      2.4,
-      delta,
+    // recedes rather than simply sliding off the top of the viewport. The drag's
+    // elevation rides on the same arc, so the two compose without fighting.
+    // Cursor parallax on the camera stops with the rest of the ambient motion; the
+    // scroll lift does not, because that one is the scene receding as the hero leaves
+    // rather than the model appearing to move by itself.
+    const home = placeCamera(
+      ORBIT_ELEVATION + dragPitch,
+      hasDragged ? 0 : pointerX * 0.22,
+      hasDragged ? 0 : -pointerY * 0.13,
+      scroll * 0.18,
     )
-    camera.position.y = THREE.MathUtils.damp(
-      camera.position.y,
-      CAMERA_HOME.y - pointerY * 0.13 + scroll * 0.18,
-      2.4,
-      delta,
-    )
-    camera.position.z = THREE.MathUtils.damp(camera.position.z, CAMERA_HOME.z + scroll * 0.35, 2.4, delta)
+    camera.position.x = THREE.MathUtils.damp(camera.position.x, home.x, 2.4, delta)
+    camera.position.y = THREE.MathUtils.damp(camera.position.y, home.y, 2.4, delta)
+    camera.position.z = THREE.MathUtils.damp(camera.position.z, home.z + scroll * 0.35, 2.4, delta)
     camera.lookAt(CAMERA_TARGET)
   })
 

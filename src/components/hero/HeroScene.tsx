@@ -1,7 +1,7 @@
 import { type RefObject, Suspense, lazy, useCallback, useEffect, useRef, useState } from 'react'
 
 import { SceneBoundary } from '@/components/three/SceneBoundary'
-import { useSceneDrag } from '@/components/three/lib/useSceneDrag'
+import { PITCH_LIMITS, YAW_LIMITS, YAW_OVERSHOOT } from '@/components/three/lib/rigLimits'
 import { useSceneInput } from '@/components/three/lib/useSceneInput'
 import { supportsWebGL } from '@/components/three/lib/webgl'
 import { useSceneQuality } from '@/components/three/useSceneQuality'
@@ -23,11 +23,27 @@ const DeveloperScene = lazy(() => import('@/components/three/DeveloperScene'))
  */
 export function HeroScene({ sectionRef }: { sectionRef: RefObject<HTMLElement | null> }) {
   const containerRef = useRef<HTMLDivElement>(null)
-  const input = useSceneInput(sectionRef)
   const quality = useSceneQuality()
   const prefersReducedMotion = usePrefersReducedMotion()
   const isLightOn = useDeskLight()
   const [showSwitchHint, setShowSwitchHint] = useState(() => !hasStoredPreference())
+  const [showDragHint, setShowDragHint] = useState(true)
+
+  // The one and only render this whole gesture is allowed to cause. `useSceneInput`
+  // fires it on the first drag and never again, so the hint's dismissal costs a single
+  // pass and the thousand pointer events after it cost none.
+  const handleFirstDrag = useCallback(() => setShowDragHint(false), [])
+
+  const { input, setFrameRequest } = useSceneInput(sectionRef, {
+    // The whole hero, not just the canvas box. The scene bleeds behind the text column
+    // on a wide screen, so a visitor who grabs the model where they can see it over the
+    // headline is grabbing something that looks exactly like the part that turns.
+    dragTargetRef: sectionRef,
+    onFirstDrag: handleFirstDrag,
+    yawLimits: YAW_LIMITS,
+    pitchLimits: PITCH_LIMITS,
+    yawOvershoot: YAW_OVERSHOOT,
+  })
 
   const handleToggleLight = useCallback(() => {
     setDeskLight(!isLightOn)
@@ -39,13 +55,6 @@ export function HeroScene({ sectionRef }: { sectionRef: RefObject<HTMLElement | 
   // the three.js chunk is still in flight.
   const [canRender] = useState(supportsWebGL)
   const [isOnScreen, setIsOnScreen] = useState(true)
-
-  // Drag-to-rotate is off for reduced-motion visitors. The scene renders a single
-  // static frame for them (`frameloop="demand"`), so a drag would accumulate rotation
-  // that never gets drawn — and a grab cursor promising motion the page has been asked
-  // not to produce is worse than no affordance at all.
-  const canDrag = canRender && !prefersReducedMotion
-  useSceneDrag(containerRef, input, canDrag)
 
   useEffect(() => {
     const element = containerRef.current
@@ -63,15 +72,19 @@ export function HeroScene({ sectionRef }: { sectionRef: RefObject<HTMLElement | 
     <div
       ref={containerRef}
       aria-hidden="true"
-      className={`absolute inset-0 lg:left-[38%] motion-reduce:opacity-70 ${
-        canDrag ? 'scene-drag' : ''
-      }`}
+      // The gesture itself is bound to the hero <section>, not to this box — see the
+      // `dragTargetRef` above. This element is only where the canvas is *drawn*, and on
+      // a large screen that is the right-hand 62%; binding the drag here too meant the
+      // left third of the hero looked identical and did nothing when pulled. The cursor
+      // and `touch-action` therefore live on the section as well, with the gesture.
+      className={`absolute inset-0 select-none motion-reduce:opacity-70 lg:left-[38%]`}
     >
       <SceneBoundary fallback={<ScenePoster />}>
         <Suspense fallback={<ScenePoster />}>
           {canRender ? (
             <DeveloperScene
               input={input}
+              setFrameRequest={setFrameRequest}
               quality={quality}
               animate={!prefersReducedMotion}
               active={isOnScreen}
@@ -84,6 +97,50 @@ export function HeroScene({ sectionRef }: { sectionRef: RefObject<HTMLElement | 
           )}
         </Suspense>
       </SceneBoundary>
+
+      {canRender && <DragHint visible={showDragHint} animate={!prefersReducedMotion} />}
+    </div>
+  )
+}
+
+/**
+ * Tells the visitor the model is theirs to turn.
+ *
+ * The canvas cannot advertise itself: it has no affordance, no hover state worth the
+ * name, and the grab cursor only exists once a mouse is already over it — which rules
+ * out every touch device. So it is said in words, once, and then it goes away. Like
+ * the wall switch's pulse, a hint that keeps asking after it has been understood is
+ * just noise, and this one sits over a moving scene where noise is expensive.
+ *
+ * Two elements rather than one because two different things animate: the wrapper fades
+ * the hint out for good, the inner pill breathes while it is still waiting. Writing
+ * both to the same element would mean a CSS transition and a CSS animation fighting
+ * over `opacity`, and the animation wins — the hint would never leave.
+ *
+ * Vertical position is a percentage, not a fixed offset: `.scrim-y` ramps to solid over
+ * the bottom quarter of the hero, and anything parked in that ramp is washed out at
+ * whatever viewport height happens to put it there.
+ *
+ * Desktop only, and not for want of trying. Below `lg` the canvas stops being its own
+ * column and becomes a backdrop directly behind the copy, at which point every place
+ * this could go is already owned by the text or by the scrim — and a hint that lands
+ * on top of the name and the call to action costs more than the affordance it buys.
+ * The gesture still works there; it is only the label that is absent.
+ */
+function DragHint({ visible, animate }: { visible: boolean; animate: boolean }) {
+  return (
+    <div
+      className={`pointer-events-none absolute bottom-[20%] left-1/2 hidden -translate-x-1/2 transition-opacity duration-700 lg:block ${
+        visible ? 'opacity-100' : 'opacity-0'
+      }`}
+    >
+      <p
+        className={`glass-soft text-mist/70 rounded-full px-3.5 py-1 font-mono text-[0.6875rem] tracking-[0.14em] whitespace-nowrap uppercase ${
+          animate ? 'animate-hint-breathe' : ''
+        }`}
+      >
+        Click &amp; drag to rotate
+      </p>
     </div>
   )
 }
@@ -109,4 +166,3 @@ function ScenePoster() {
     </div>
   )
 }
-
