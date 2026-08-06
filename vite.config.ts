@@ -29,5 +29,9 @@ export default defineConfig({
     // exceed vitest's 5s default on a loaded machine even though they pass in
     // isolation. Raised to keep the suite from failing on scheduling noise.
     testTimeout: 20_000,
+    // `.claude/worktrees/*` holds throwaway git worktrees, each with its own
+    // node_modules. Without this, vitest globs their copy of the suite as well and
+    // runs it against a second React instance, so every hook call throws.
+    exclude: ['**/node_modules/**', '**/dist/**', '**/.claude/**'],
   },
 })

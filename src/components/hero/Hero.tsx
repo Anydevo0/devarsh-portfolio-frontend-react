@@ -49,7 +49,15 @@ export function Hero() {
   return (
     <section
       ref={sectionRef}
-      className="bg-void text-mist relative isolate flex min-h-svh items-center overflow-hidden"
+      // The scene's drag gesture is bound to this element rather than to the canvas box
+      // inside it, so the affordance belongs here too. `touch-pan-y` is the whole touch
+      // story: the browser keeps vertical panning, so the page still scrolls under a
+      // finger placed on the model, and hands us the horizontal axis. `touch-action:
+      // none` would have taken both and left phone visitors stuck on a hero they could
+      // not scroll past.
+      className={`bg-void text-mist relative isolate flex min-h-svh items-center overflow-hidden ${
+        hasScene ? 'scene-grab touch-pan-y' : ''
+      }`}
     >
       <HeroScene sectionRef={sectionRef} />
 

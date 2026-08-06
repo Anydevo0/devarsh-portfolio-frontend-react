@@ -43,9 +43,10 @@ export function WallSwitch({ palette, isOn, animate, onToggle, showHint }: WallS
   const rocker = useRef<THREE.Mesh>(null)
   const halo = useRef<THREE.Sprite>(null)
   const led = useRef<THREE.Mesh>(null)
+  const ledGlow = useRef<THREE.Sprite>(null)
 
   // Restore the cursor if the component unmounts while hovered.
-  useEffect(() => () => void (document.body.style.cursor = ''), [])
+  useEffect(() => () => void delete document.body.dataset.sceneHit, [])
 
   useFrame((state, delta) => {
     const step = animate ? 1 - Math.exp(-14 * delta) : 1
@@ -58,16 +59,35 @@ export function WallSwitch({ palette, isOn, animate, onToggle, showHint }: WallS
 
     if (led.current) {
       const material = led.current.material as THREE.MeshStandardMaterial
-      material.emissiveIntensity += ((isOn ? 3 : 0.35) - material.emissiveIntensity) * step
+      material.emissiveIntensity += ((isOn ? 5.5 : 0.95) - material.emissiveIntensity) * step
+    }
+
+    // Brightness alone stopped separating the two states once the idle LED was raised
+    // to something you can actually see: the emissive core clips to white well below
+    // the live intensity, so past that point turning it up changes nothing on screen.
+    // The bloom carries the difference instead — it grows and roughly triples in
+    // strength — which also keeps the green hue visible, since it is the sprite rather
+    // than the clipped core that is still coloured at full output.
+    if (ledGlow.current) {
+      const material = ledGlow.current.material as THREE.SpriteMaterial
+      material.opacity += ((isOn ? 0.92 : 0.32) - material.opacity) * step
+      const scale = ledGlow.current.scale.x
+      const target = isOn ? 0.15 : 0.075
+      const next = scale + (target - scale) * step
+      ledGlow.current.scale.set(next, next, 1)
     }
 
     if (halo.current) {
       const material = halo.current.material as THREE.SpriteMaterial
-      // Breathes while unused, then settles to a faint constant presence.
+      // Breathes while unused, then settles — but the settled value now tracks the
+      // lamp, so the plate itself reports state from across the room instead of
+      // leaving that job to a 2mm dot the visitor has to hunt for.
+      const settled = isOn ? 0.36 : 0.19
       const target =
-        showHint && animate ? 0.3 + Math.sin(state.clock.elapsedTime * 2.2) * 0.22 : 0.12
+        showHint && animate ? 0.52 + Math.sin(state.clock.elapsedTime * 2.2) * 0.26 : settled
       material.opacity += (target - material.opacity) * step
-      const scale = 0.55 + (showHint && animate ? Math.sin(state.clock.elapsedTime * 2.2) * 0.06 : 0)
+      const scale =
+        0.55 + (showHint && animate ? Math.sin(state.clock.elapsedTime * 2.2) * 0.06 : 0)
       halo.current.scale.set(scale, scale, 1)
     }
   })
@@ -79,11 +99,15 @@ export function WallSwitch({ palette, isOn, animate, onToggle, showHint }: WallS
 
   function handleOver(event: ThreeEvent<PointerEvent>) {
     event.stopPropagation()
-    document.body.style.cursor = 'pointer'
+    // A flag rather than `document.body.style.cursor`, because the canvas wrapper now
+    // advertises a grab cursor of its own. Two components writing the same inline
+    // property means last-writer-wins, and the last writer is whichever pointer event
+    // happened to fire second — so precedence is settled in CSS instead (index.css).
+    document.body.dataset.sceneHit = 'switch'
   }
 
   function handleOut() {
-    document.body.style.cursor = ''
+    delete document.body.dataset.sceneHit
   }
 
   return (
@@ -113,8 +137,16 @@ export function WallSwitch({ palette, isOn, animate, onToggle, showHint }: WallS
         <boxGeometry args={[0.088, 0.14, 0.016]} />
       </mesh>
 
-      <mesh ref={led} position={[0, -0.082, 0.014]} material={palette.switchLed} dispose={null}>
-        <sphereGeometry args={[0.007, 8, 8]} />
+      {/* In front of the bead, standing in for the bloom pass this scene does not run.
+          Clearing the sphere entirely matters: the sprite is additive with depth
+          testing on, so parking it inside the LED would let the bead punch a hole
+          through its own glow. */}
+      <sprite ref={ledGlow} position={[0, -0.082, 0.026]} scale={[0.075, 0.075, 1]} dispose={null}>
+        <primitive object={palette.switchLedGlow} attach="material" />
+      </sprite>
+
+      <mesh ref={led} position={[0, -0.082, 0.0155]} material={palette.switchLed} dispose={null}>
+        <sphereGeometry args={[0.0095, 10, 10]} />
       </mesh>
 
       {/* Etched label under the plate — a texture rather than DOM, so it stays

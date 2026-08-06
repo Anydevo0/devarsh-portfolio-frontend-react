@@ -79,6 +79,41 @@ describe('ChatWidget', () => {
     expect(await screen.findByText('Hi there')).toBeInTheDocument()
   })
 
+  it('sends on Enter and clears the field', async () => {
+    server.use(
+      http.post(`${BASE}/chat`, () =>
+        sseResponse(
+          'event: token\ndata: {"content":"Sent"}\n\n' +
+            'event: done\ndata: {"conversation_id":"abc-123"}\n\n',
+        ),
+      ),
+    )
+    const user = userEvent.setup()
+    render(<ChatWidget />)
+
+    await openWidget(user)
+    const field = screen.getByLabelText('Ask a question')
+    await user.type(field, 'What have you built?{Enter}')
+
+    expect(await screen.findByText('Sent')).toBeInTheDocument()
+    expect(field).toHaveValue('')
+  })
+
+  // Shift+Enter is the escape hatch that makes the multi-line field usable — it has to
+  // reach the textarea's default behaviour instead of being swallowed by the submit.
+  it('inserts a newline on Shift+Enter without sending', async () => {
+    const user = userEvent.setup()
+    render(<ChatWidget />)
+
+    await openWidget(user)
+    const field = screen.getByLabelText('Ask a question')
+    await user.type(field, 'first{Shift>}{Enter}{/Shift}second')
+
+    expect(field).toHaveValue('first\nsecond')
+    // Nothing was sent, so the log is still showing its empty state.
+    expect(screen.getByText(/Ask me anything about/)).toBeInTheDocument()
+  })
+
   it('shows the pre-stream rate-limit message from the JSON envelope', async () => {
     server.use(
       http.post(`${BASE}/chat`, () =>

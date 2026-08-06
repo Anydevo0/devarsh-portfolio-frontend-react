@@ -3,11 +3,13 @@ import { useEffect } from 'react'
 import * as THREE from 'three'
 
 import type { SceneQuality } from './lib/textures'
-import type { SceneInput } from './lib/useSceneInput'
+import type { SceneInput, SceneInputHandle } from './lib/useSceneInput'
 import { WorkstationScene } from './WorkstationScene'
 
 interface DeveloperSceneProps {
   input: SceneInput
+  /** Lets the drag listeners outside the Canvas ask for a frame — see `FrameRequests`. */
+  setFrameRequest: SceneInputHandle['setFrameRequest']
   quality: SceneQuality
   /** False when the visitor prefers reduced motion — the scene renders one static frame. */
   animate: boolean
@@ -25,6 +27,7 @@ interface DeveloperSceneProps {
  */
 export default function DeveloperScene({
   input,
+  setFrameRequest,
   quality,
   animate,
   active,
@@ -60,6 +63,7 @@ export default function DeveloperScene({
           the hero scrolled away — nothing would otherwise redraw after a toggle, and
           the switch would appear to do nothing. */}
       <RenderOnce key={`${running}-${quality}-${isLightOn}`} />
+      <FrameRequests publish={setFrameRequest} />
       <WorkstationScene
         quality={quality}
         animate={animate}
@@ -82,5 +86,23 @@ function RenderOnce() {
   useEffect(() => {
     invalidate()
   }, [invalidate])
+  return null
+}
+
+/**
+ * Hands `invalidate` out to the DOM listeners in `useSceneInput`.
+ *
+ * The drag gesture is read outside the Canvas, where nothing has access to the
+ * renderer. Under `frameloop="demand"` — a reduced-motion visitor, or the hero
+ * scrolled away — the loop is asleep, so dragging would update the input ref and
+ * then sit there with no frame to read it. Kept out of `RenderOnce` because that
+ * component is keyed and remounts on every lamp toggle; this one must not.
+ */
+function FrameRequests({ publish }: { publish: SceneInputHandle['setFrameRequest'] }) {
+  const invalidate = useThree((state) => state.invalidate)
+  useEffect(() => {
+    publish(invalidate)
+    return () => publish(null)
+  }, [publish, invalidate])
   return null
 }
