@@ -6,6 +6,13 @@ export interface SceneInputValues {
   /** Cursor position, normalised to -1…1 across the viewport. */
   pointerX: number
   pointerY: number
+  /**
+   * Accumulated drag yaw in radians, before soft-limiting. Written by `useSceneDrag`
+   * while a pointer is held, and eased back to zero by the scene once it is released.
+   */
+  dragRaw: number
+  /** True while a press has been recognised as a drag. See `useSceneDrag`. */
+  isDragging: boolean
 }
 
 export type SceneInput = RefObject<SceneInputValues>
@@ -25,7 +32,13 @@ export type SceneInput = RefObject<SceneInputValues>
  * rig cannot guarantee.
  */
 export function useSceneInput(targetRef: RefObject<HTMLElement | null>): SceneInput {
-  const input = useRef<SceneInputValues>({ scroll: 0, pointerX: 0, pointerY: 0 })
+  const input = useRef<SceneInputValues>({
+    scroll: 0,
+    pointerX: 0,
+    pointerY: 0,
+    dragRaw: 0,
+    isDragging: false,
+  })
 
   useEffect(() => {
     let frame = 0

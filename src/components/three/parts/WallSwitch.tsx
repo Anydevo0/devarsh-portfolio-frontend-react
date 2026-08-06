@@ -43,9 +43,22 @@ export function WallSwitch({ palette, isOn, animate, onToggle, showHint }: WallS
   const rocker = useRef<THREE.Mesh>(null)
   const halo = useRef<THREE.Sprite>(null)
   const led = useRef<THREE.Mesh>(null)
+  /**
+   * The canvas, held only so the cursor can be restored on unmount.
+   *
+   * The cursor goes on the canvas rather than on `document.body`, because the hero's
+   * drag layer sets `cursor: grab` on the element the canvas sits inside — a
+   * body-level cursor loses to that for anything within the subtree, while an inline
+   * one on the canvas itself wins. Removing it again falls back to the inherited grab,
+   * which is the correct resting state now that the whole scene is draggable.
+   *
+   * It is read off the event rather than from `useThree` so that nothing here mutates
+   * a value returned by a hook.
+   */
+  const canvas = useRef<HTMLElement | null>(null)
 
   // Restore the cursor if the component unmounts while hovered.
-  useEffect(() => () => void (document.body.style.cursor = ''), [])
+  useEffect(() => () => canvas.current?.style.removeProperty('cursor'), [])
 
   useFrame((state, delta) => {
     const step = animate ? 1 - Math.exp(-14 * delta) : 1
@@ -79,11 +92,14 @@ export function WallSwitch({ palette, isOn, animate, onToggle, showHint }: WallS
 
   function handleOver(event: ThreeEvent<PointerEvent>) {
     event.stopPropagation()
-    document.body.style.cursor = 'pointer'
+    const target = event.nativeEvent.target
+    if (!(target instanceof HTMLElement)) return
+    canvas.current = target
+    target.style.cursor = 'pointer'
   }
 
   function handleOut() {
-    document.body.style.cursor = ''
+    canvas.current?.style.removeProperty('cursor')
   }
 
   return (

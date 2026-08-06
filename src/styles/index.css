@@ -83,6 +83,25 @@ body {
   border-radius: 0.375rem;
 }
 
+/* The hero's 3D layer, which can be grabbed and turned. See `useSceneDrag`.
+
+   `pan-y` is the whole mobile story: it hands vertical gestures to the browser and
+   keeps horizontal ones for the scene. Below `lg` the canvas covers the entire hero,
+   so `touch-action: none` would leave a visitor unable to scroll off the first screen.
+
+   `cursor` inherits, so the canvas picks `grab` up from here — which lets the wall
+   switch override it with `pointer` by writing to the canvas directly, and lets it
+   hand the grab cursor back by simply removing that inline value again. */
+.scene-drag {
+  cursor: grab;
+  touch-action: pan-y;
+}
+.scene-drag[data-dragging='true'],
+.scene-drag[data-dragging='true'] canvas {
+  cursor: grabbing;
+  user-select: none;
+}
+
 /* ---------------------------------------------------------------------------
    Surfaces
    Glass is the site's only card treatment: a near-transparent fill over blur,

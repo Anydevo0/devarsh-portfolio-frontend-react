@@ -1,6 +1,7 @@
 import { type RefObject, Suspense, lazy, useCallback, useEffect, useRef, useState } from 'react'
 
 import { SceneBoundary } from '@/components/three/SceneBoundary'
+import { useSceneDrag } from '@/components/three/lib/useSceneDrag'
 import { useSceneInput } from '@/components/three/lib/useSceneInput'
 import { supportsWebGL } from '@/components/three/lib/webgl'
 import { useSceneQuality } from '@/components/three/useSceneQuality'
@@ -39,6 +40,13 @@ export function HeroScene({ sectionRef }: { sectionRef: RefObject<HTMLElement | 
   const [canRender] = useState(supportsWebGL)
   const [isOnScreen, setIsOnScreen] = useState(true)
 
+  // Drag-to-rotate is off for reduced-motion visitors. The scene renders a single
+  // static frame for them (`frameloop="demand"`), so a drag would accumulate rotation
+  // that never gets drawn — and a grab cursor promising motion the page has been asked
+  // not to produce is worse than no affordance at all.
+  const canDrag = canRender && !prefersReducedMotion
+  useSceneDrag(containerRef, input, canDrag)
+
   useEffect(() => {
     const element = containerRef.current
     if (!element || typeof IntersectionObserver === 'undefined') return
@@ -55,7 +63,9 @@ export function HeroScene({ sectionRef }: { sectionRef: RefObject<HTMLElement | 
     <div
       ref={containerRef}
       aria-hidden="true"
-      className="absolute inset-0 lg:left-[38%] motion-reduce:opacity-70"
+      className={`absolute inset-0 lg:left-[38%] motion-reduce:opacity-70 ${
+        canDrag ? 'scene-drag' : ''
+      }`}
     >
       <SceneBoundary fallback={<ScenePoster />}>
         <Suspense fallback={<ScenePoster />}>

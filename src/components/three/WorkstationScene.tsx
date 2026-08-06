@@ -30,6 +30,17 @@ const BASE_ROTATION = -0.1
 const SCROLL_ROTATION = 0.4
 
 /**
+ * How far a drag can turn the rig either way, in radians — about 26°.
+ *
+ * Bounded for the same reason `SCROLL_ROTATION` is small: the figure has no face. At
+ * rest the camera sits 130° off their facing direction, so this is the most that can
+ * be given up before the view swings toward a profile and starts asking for features
+ * that were never modelled. It is applied as a soft limit rather than a clamp, so the
+ * end of the range is felt as resistance instead of a wall.
+ */
+const MAX_DRAG_ROTATION = 0.45
+
+/**
  * The canvas occupies the right ~62% of the hero, so its aspect is close to square
  * rather than the 16:9 a default camera distance would assume. At 3m the desk ran off
  * both edges; this pulls back far enough to frame the whole workstation, with the
@@ -58,6 +69,16 @@ export function WorkstationScene({
   showSwitchHint,
 }: WorkstationSceneProps) {
   const rig = useRef<THREE.Group>(null)
+  /**
+   * The scroll contribution to yaw, smoothed on its own channel.
+   *
+   * Kept separate from the drag offset rather than damping one combined target,
+   * because the two want opposite feels — scroll trails the page with a long ease,
+   * while a drag has to sit under the pointer. Composing them additively is also what
+   * lets "return to default" mean "return to the pose scroll asks for" instead of the
+   * two inputs fighting over a single value.
+   */
+  const scrollYaw = useRef(0)
 
   // One palette for the whole scene. Rebuilt only if the device tier changes, which
   // in practice means a resize across the tablet breakpoint.
@@ -68,7 +89,7 @@ export function WorkstationScene({
     const group = rig.current
     if (!group) return
 
-    const { scroll, pointerX, pointerY } = input.current
+    const { scroll, pointerX, pointerY, dragRaw } = input.current
     const camera = state.camera
 
     if (!animate) {
@@ -81,9 +102,22 @@ export function WorkstationScene({
     // MathUtils.damp is frame-rate independent, so the easing feels identical at 60
     // and 144 Hz. A plain lerp with a fixed alpha would not — it would ease roughly
     // twice as fast on a 120 Hz display.
-    const targetRotation = BASE_ROTATION + scroll * SCROLL_ROTATION + pointerX * 0.045
-    group.rotation.y = THREE.MathUtils.damp(group.rotation.y, targetRotation, 3.2, delta)
-    group.rotation.x = THREE.MathUtils.damp(group.rotation.x, pointerY * 0.014, 3.2, delta)
+    scrollYaw.current = THREE.MathUtils.damp(
+      scrollYaw.current,
+      scroll * SCROLL_ROTATION,
+      3.2,
+      delta,
+    )
+
+    // Soft limit: linear near the centre, so the drag tracks the pointer one-to-one
+    // through the range a visitor will actually use, then asymptotic at the edges
+    // rather than stopping dead against a clamp. `useSceneDrag` owns the raw value,
+    // including easing it back to zero on release, so there is nothing to smooth here.
+    const dragYaw = MAX_DRAG_ROTATION * Math.tanh(dragRaw / MAX_DRAG_ROTATION)
+
+    // Set outright rather than damped — both channels arrive pre-smoothed, and damping
+    // the sum again would put a second lag between the pointer and the model.
+    group.rotation.y = BASE_ROTATION + scrollYaw.current + dragYaw
 
     // Camera parallax, plus a slow pull-back as the hero scrolls away so the scene
     // recedes rather than simply sliding off the top of the viewport.
