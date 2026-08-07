@@ -14,9 +14,7 @@ function mergeWithDefaults(stored: Partial<SiteContent> | null): SiteContent {
     focus: {
       ...DEFAULT_SITE_CONTENT.focus,
       ...stored.focus,
-      highlights: stored.focus?.highlights?.length
-        ? stored.focus.highlights
-        : DEFAULT_SITE_CONTENT.focus.highlights,
+      notes: stored.focus?.notes?.length ? stored.focus.notes : DEFAULT_SITE_CONTENT.focus.notes,
     },
   }
 }

@@ -404,6 +404,20 @@ body[data-scene-hit='switch'] .scene-grab {
   color: transparent;
 }
 
+/* A highlighter stroke under one phrase in the About page's handwritten intro — the
+   site's one warm colour again, at the low opacity a marker looks like on top of text
+   rather than a filled box behind it. `<mark>` resets to transparent-on-currentColor
+   first: its UA default is a solid yellow fill with black text, which would fight
+   both the palette and the light-on-dark body copy it sits in. */
+.notebook-highlight {
+  background: color-mix(in oklab, var(--color-saffron) 30%, transparent);
+  color: inherit;
+  border-radius: 0.2em;
+  padding-inline: 0.15em;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+}
+
 /* Tailwind Typography, tuned to the design tokens rather than left at its generic
    defaults — headings pick up the display serif, links use the wire teal accent. */
 .prose {

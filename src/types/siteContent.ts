@@ -15,16 +15,18 @@ export interface HeroContent {
   ctaSecondary: CtaButtonContent
 }
 
-export interface FocusHighlight {
+/** One sticky note on the About page's notebook spread. */
+export interface NotebookNote {
   title: string
-  text: string
-  tags: string[]
+  items: string[]
 }
 
 export interface FocusSectionContent {
   eyebrow: string
+  /** The handwritten heading above the intro paragraph, e.g. "Hey, I'm Devarsh..!" */
+  heading: string
   intro: string
-  highlights: FocusHighlight[]
+  notes: NotebookNote[]
 }
 
 export interface SiteContent {

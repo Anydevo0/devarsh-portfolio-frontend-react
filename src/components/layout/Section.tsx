@@ -6,7 +6,12 @@ interface SectionProps {
   id: string
   /** HTTP method + path, e.g. `GET /projects`. See `RouteLabel`. */
   route: string
-  title: string
+  /**
+   * Usually a plain string, styled by the `h2` below. `ReactNode` so a section can
+   * substitute its own styling on the same element — About does this to make its
+   * heading read as handwritten rather than as this component's default `font-tech`.
+   */
+  title: ReactNode
   lede?: ReactNode
   children: ReactNode
   /** Right-aligned slot in the header, for a section-level link. */

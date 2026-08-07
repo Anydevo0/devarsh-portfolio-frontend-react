@@ -4,7 +4,7 @@ const SECTIONS = [
   {
     to: '/admin/content',
     title: 'Site content',
-    description: 'Hero copy, profile photo, and the professional-focus highlights.',
+    description: 'Hero copy and the About page’s notebook heading, intro, and sticky notes.',
   },
   {
     to: '/admin/projects',

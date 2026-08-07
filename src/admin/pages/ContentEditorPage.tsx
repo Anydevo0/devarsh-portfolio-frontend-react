@@ -4,7 +4,6 @@ import { Controller, useFieldArray, useForm } from 'react-hook-form'
 import { z } from 'zod'
 
 import { ConfirmDialog } from '@/admin/components/ConfirmDialog'
-import { TagChipInput } from '@/admin/components/TagChipInput'
 import { DEFAULT_SITE_CONTENT } from '@/data/siteContent'
 import {
   exportContentJson,
@@ -19,10 +18,9 @@ const ctaSchema = z.object({
   href: z.string().min(1, 'Link is required.').max(300),
 })
 
-const highlightSchema = z.object({
+const noteSchema = z.object({
   title: z.string().min(1, 'Title is required.').max(80),
-  text: z.string().min(1, 'Description is required.').max(400),
-  tags: z.array(z.string()),
+  items: z.array(z.string()),
 })
 
 const contentSchema = z.object({
@@ -38,8 +36,9 @@ const contentSchema = z.object({
   }),
   focus: z.object({
     eyebrow: z.string().max(120),
+    heading: z.string().min(1, 'Heading is required.').max(120),
     intro: z.string().min(1, 'Intro paragraph is required.').max(600),
-    highlights: z.array(highlightSchema).min(1, 'Add at least one highlight.'),
+    notes: z.array(noteSchema).min(1, 'Add at least one note.'),
   }),
 })
 
@@ -69,7 +68,7 @@ export function ContentEditorPage() {
     defaultValues: content,
   })
 
-  const { fields, append, remove } = useFieldArray({ control, name: 'focus.highlights' })
+  const { fields, append, remove } = useFieldArray({ control, name: 'focus.notes' })
 
   function onSubmit(values: ContentForm) {
     setContent(values)
@@ -207,7 +206,7 @@ export function ContentEditorPage() {
         </section>
 
         <section className="border-line flex flex-col gap-5 border-t pt-8">
-          <h2 className="font-display text-lg font-bold">Professional focus</h2>
+          <h2 className="font-display text-lg font-bold">About / notebook page</h2>
 
           <div>
             <label htmlFor="focus-eyebrow" className={labelClass}>
@@ -217,8 +216,16 @@ export function ContentEditorPage() {
           </div>
 
           <div>
+            <label htmlFor="focus-heading" className={labelClass}>
+              Handwritten heading
+            </label>
+            <input id="focus-heading" {...register('focus.heading')} className={inputClass} />
+            {errors.focus?.heading && <p className={errorClass}>{errors.focus.heading.message}</p>}
+          </div>
+
+          <div>
             <label htmlFor="focus-intro" className={labelClass}>
-              Section intro
+              Handwritten intro
             </label>
             <textarea
               id="focus-intro"
@@ -234,7 +241,7 @@ export function ContentEditorPage() {
               <div key={field.id} className="border-line rounded-lg border p-4">
                 <div className="flex items-start justify-between gap-3">
                   <span className="text-mute font-mono text-xs tracking-wide uppercase">
-                    Highlight {index + 1}
+                    Sticky note {index + 1}
                   </span>
                   <button
                     type="button"
@@ -246,62 +253,49 @@ export function ContentEditorPage() {
                 </div>
 
                 <div className="mt-3">
-                  <label htmlFor={`highlight-${index}-title`} className={labelClass}>
+                  <label htmlFor={`note-${index}-title`} className={labelClass}>
                     Title
                   </label>
                   <input
-                    id={`highlight-${index}-title`}
-                    {...register(`focus.highlights.${index}.title` as const)}
+                    id={`note-${index}-title`}
+                    {...register(`focus.notes.${index}.title` as const)}
                     className={inputClass}
                   />
-                  {errors.focus?.highlights?.[index]?.title && (
-                    <p className={errorClass}>{errors.focus.highlights[index]?.title?.message}</p>
+                  {errors.focus?.notes?.[index]?.title && (
+                    <p className={errorClass}>{errors.focus.notes[index]?.title?.message}</p>
                   )}
                 </div>
 
                 <div className="mt-3">
-                  <label htmlFor={`highlight-${index}-text`} className={labelClass}>
-                    Description
+                  <label htmlFor={`note-${index}-items`} className={labelClass}>
+                    Items — one per line
                   </label>
-                  <textarea
-                    id={`highlight-${index}-text`}
-                    rows={3}
-                    {...register(`focus.highlights.${index}.text` as const)}
-                    className={inputClass}
-                  />
-                  {errors.focus?.highlights?.[index]?.text && (
-                    <p className={errorClass}>{errors.focus.highlights[index]?.text?.message}</p>
-                  )}
-                </div>
-
-                <div className="mt-3">
-                  <span className={labelClass}>Technologies</span>
                   <Controller
                     control={control}
-                    name={`focus.highlights.${index}.tags` as const}
-                    render={({ field: tagField }) => (
-                      <div className="mt-1">
-                        <TagChipInput
-                          value={tagField.value}
-                          onChange={tagField.onChange}
-                          placeholder="Add a technology…"
-                        />
-                      </div>
+                    name={`focus.notes.${index}.items` as const}
+                    render={({ field: itemsField }) => (
+                      <textarea
+                        id={`note-${index}-items`}
+                        rows={4}
+                        value={itemsField.value.join('\n')}
+                        onChange={(event) => itemsField.onChange(event.target.value.split('\n'))}
+                        className={inputClass}
+                      />
                     )}
                   />
                 </div>
               </div>
             ))}
-            {errors.focus?.highlights?.message && (
-              <p className={errorClass}>{errors.focus.highlights.message}</p>
+            {errors.focus?.notes?.message && (
+              <p className={errorClass}>{errors.focus.notes.message}</p>
             )}
 
             <button
               type="button"
-              onClick={() => append({ title: 'New focus area', text: '', tags: [] })}
+              onClick={() => append({ title: 'New note', items: [] })}
               className="border-line hover:bg-line/20 self-start rounded border px-4 py-2 font-mono text-sm"
             >
-              + Add highlight
+              + Add sticky note
             </button>
           </div>
         </section>
