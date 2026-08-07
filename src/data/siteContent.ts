@@ -18,9 +18,9 @@ export const DEFAULT_SITE_CONTENT: SiteContent = {
   },
   focus: {
     eyebrow: '// field notes',
-    heading: "Hey, I'm Devarsh..!",
+    heading: "Who am I?",
     intro:
-      "I build production-grade backend systems and AI-powered applications. My work centers on scalable APIs, intelligent workflows, and turning LLMs into practical products — I'm always looking for better ways to solve real-world problems with software.",
+      "I am a developer who builds production-grade backend systems and AI-powered applications. My work centers on scalable APIs, intelligent workflows, and turning LLMs into practical products — I'm always looking for better ways to solve real-world problems with software.",
     notes: [
       {
         title: 'What I Build',
