@@ -33,14 +33,20 @@ export interface SceneInputValues {
    */
   isDragging: boolean
   /**
-   * True once the visitor has dragged even one pixel, and never false again.
+   * True from the moment a drag ends until the rig has settled back at rest.
    *
-   * Scroll and cursor parallax stop contributing to yaw at that point. They are
-   * ambient motion for a scene nobody has touched — but once someone has posed the
-   * model by hand, anything that keeps nudging it reads as the thing having a mind of
-   * its own, and it silently eats the range they have left to drag through.
+   * Together with `isDragging` this is the scene's "the visitor is driving" flag, and
+   * scroll and cursor parallax stand down for as long as either is set. They are
+   * ambient motion for a scene nobody is touching; while someone is posing the model by
+   * hand, or while it is on its way home from that, anything else nudging the same
+   * value reads as the thing having a mind of its own and fights the return.
+   *
+   * It clears rather than latching, which is the whole point: ambient motion comes back
+   * once the rig is home, so scrolling still turns the scene for a visitor who has
+   * dragged it. Latching this was what made one drag disable the scroll rotation for
+   * the rest of the visit.
    */
-  hasDragged: boolean
+  isReturning: boolean
   /**
    * Published by a component inside the `<Canvas>` (see `DeveloperScene`), through
    * `setFrameRequest` below.
@@ -76,6 +82,15 @@ interface SceneInputOptions {
   pitchLimits: readonly [number, number]
   /** How far past a yaw stop the gesture may be pulled before it stops giving at all. */
   yawOvershoot: number
+  /**
+   * Whether releasing animates the rig home or simply puts it there.
+   *
+   * False for a reduced-motion visitor. The gesture itself still works for them —
+   * that setting asks for no animation, not for no controls — but the ease afterwards
+   * is motion nobody's hand is driving, which is the kind this setting exists to
+   * suppress. They get the same destination, on the frame they let go.
+   */
+  easeReturn: boolean
 }
 
 function clamp(value: number, min: number, max: number) {
@@ -115,6 +130,26 @@ const DRAG_SLOP = 5
 const INTERACTIVE = 'a, button, input, textarea, select, summary, [role="button"], [tabindex]'
 
 /**
+ * How sharply the rig eases home after a release, as an exponential decay constant.
+ *
+ * `exp(-k·dt)` is an ease-out — fastest at the moment of release, asymptotically slower
+ * as it arrives — and it is frame-rate independent, so the return takes the same
+ * wall-clock time on a 60Hz panel and a 144Hz one. At 9 the rig is ~97% home in 400ms,
+ * which is quick enough to feel like a spring rather than a drift, and slow enough that
+ * the eye can follow where the model went.
+ */
+const RETURN_DECAY = 9
+
+/**
+ * When the return is close enough to stop.
+ *
+ * ~0.06° of yaw: comfortably under a pixel of movement anywhere on the model, so
+ * stopping here is invisible. Without a floor an exponential never actually arrives,
+ * and the rAF loop — and with it the render loop it keeps waking — would run forever.
+ */
+const REST_EPSILON = 0.001
+
+/**
  * Collects scroll, pointer position and the drag gesture into a ref rather than React
  * state.
  *
@@ -128,13 +163,20 @@ const INTERACTIVE = 'a, button, input, textarea, select, summary, [role="button"
  * Because the value is absolute scroll position rather than accumulated delta,
  * scrolling back up unwinds the rotation along exactly the path it came — which is
  * what the brief's "reverses, no snapping" asks for, and something a delta-driven
- * rig cannot guarantee. `drag` is absolute in the same sense: each gesture offsets
- * from where the previous one left off, so releasing and grabbing again continues
- * rather than restarting.
+ * rig cannot guarantee. `drag` is absolute in the same sense: it is a pose rather than
+ * a delta, which is what lets the release simply ease it back to the resting value
+ * instead of having to unwind a history of movements.
  */
 export function useSceneInput(
   targetRef: RefObject<HTMLElement | null>,
-  { dragTargetRef, onFirstDrag, yawLimits, pitchLimits, yawOvershoot }: SceneInputOptions,
+  {
+    dragTargetRef,
+    onFirstDrag,
+    yawLimits,
+    pitchLimits,
+    yawOvershoot,
+    easeReturn,
+  }: SceneInputOptions,
 ): SceneInputHandle {
   const input = useRef<SceneInputValues>({
     scroll: 0,
@@ -143,7 +185,7 @@ export function useSceneInput(
     dragYaw: yawLimits[2],
     dragPitch: 0,
     isDragging: false,
-    hasDragged: false,
+    isReturning: false,
     requestFrame: null,
   })
 
@@ -176,6 +218,56 @@ export function useSceneInput(
     let isDragging = false
     let swallowNextClick = false
     let hasEverDragged = false
+    let returnFrame = 0
+    let returnLast = 0
+
+    const restingYaw = yawLimits[2]
+
+    /**
+     * Eases the rig back to its resting pose after a release.
+     *
+     * Driven from here rather than from the scene's own render loop for the reason
+     * given on `setFrameRequest`: this hook owns `dragYaw` and `dragPitch`, so this
+     * hook is the only thing that writes them. It also means the return survives the
+     * render loop being asleep — under `frameloop="demand"` nothing would otherwise be
+     * stepping it — and each step asks for the frame that draws it.
+     */
+    function stepReturn(now: number) {
+      // Clamped so a tab that was backgrounded mid-return resumes with a sane delta
+      // instead of one enormous one that teleports the rig home.
+      const delta = Math.min((now - returnLast) / 1000, 0.05)
+      returnLast = now
+
+      const decay = Math.exp(-RETURN_DECAY * delta)
+      const yaw = restingYaw + (input.current.dragYaw - restingYaw) * decay
+      const pitch = input.current.dragPitch * decay
+
+      if (Math.abs(yaw - restingYaw) < REST_EPSILON && Math.abs(pitch) < REST_EPSILON) {
+        settleReturn()
+        return
+      }
+
+      input.current.dragYaw = yaw
+      input.current.dragPitch = pitch
+      input.current.requestFrame?.()
+      returnFrame = requestAnimationFrame(stepReturn)
+    }
+
+    /** Puts the rig exactly home and hands the scene back to its ambient motion. */
+    function settleReturn() {
+      returnFrame = 0
+      input.current.dragYaw = restingYaw
+      input.current.dragPitch = 0
+      input.current.isReturning = false
+      input.current.requestFrame?.()
+    }
+
+    function stopReturn() {
+      if (returnFrame === 0) return
+      cancelAnimationFrame(returnFrame)
+      returnFrame = 0
+      input.current.isReturning = false
+    }
 
     function readScroll() {
       frame = 0
@@ -236,7 +328,6 @@ export function useSceneInput(
         input.current.isDragging = true
         if (!hasEverDragged) {
           hasEverDragged = true
-          input.current.hasDragged = true
           firstDrag.current?.()
         }
       }
@@ -272,6 +363,10 @@ export function useSceneInput(
       // belongs to it: a slightly shaky click on a button must stay a click, and must
       // not be turned into a rotation and then swallowed as a drag.
       if (event.target instanceof Element && event.target.closest(INTERACTIVE)) return
+      // Catching the rig mid-return takes it from wherever it has reached, not from
+      // where the last gesture ended — grabbing something on its way home should stop
+      // it there, the way catching a swinging door does.
+      stopReturn()
       activePointer = event.pointerId
       originX = event.clientX
       originY = event.clientY
@@ -294,11 +389,20 @@ export function useSceneInput(
           dragTarget.style.cursor = ''
           dragTarget.style.userSelect = ''
         }
-        // Let go of any rubber-band stretch. The value snaps to the real limit here
-        // and the scene damps toward it, so what the visitor sees is the model easing
-        // back off the stop rather than the number teleporting.
+        // Let go of any rubber-band stretch, so the journey home starts from a pose
+        // that is actually inside the range.
         input.current.dragYaw = clamp(input.current.dragYaw, yawLimits[0], yawLimits[1])
         input.current.isDragging = false
+
+        // Straight into the return, on this event rather than on the next frame, so
+        // there is no held pause between letting go and the rig starting to move.
+        if (easeReturn) {
+          input.current.isReturning = true
+          returnLast = performance.now()
+          returnFrame = requestAnimationFrame(stepReturn)
+        } else {
+          settleReturn()
+        }
         input.current.requestFrame?.()
       }
       activePointer = -1
@@ -343,6 +447,7 @@ export function useSceneInput(
 
     return () => {
       if (frame) cancelAnimationFrame(frame)
+      stopReturn()
       window.removeEventListener('scroll', handleScroll)
       window.removeEventListener('resize', handleResize)
       window.removeEventListener('pointermove', handlePointer)
@@ -351,7 +456,7 @@ export function useSceneInput(
       dragTarget?.removeEventListener('pointerdown', handleDragStart)
       dragTarget?.removeEventListener('click', handleClickCapture, true)
     }
-  }, [targetRef, dragTargetRef, yawLimits, pitchLimits, yawOvershoot])
+  }, [targetRef, dragTargetRef, yawLimits, pitchLimits, yawOvershoot, easeReturn])
 
   const setFrameRequest = useCallback((request: (() => void) | null) => {
     input.current.requestFrame = request
