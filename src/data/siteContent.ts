@@ -17,24 +17,46 @@ export const DEFAULT_SITE_CONTENT: SiteContent = {
     ctaSecondary: { label: 'Contact me', href: '#contact' },
   },
   focus: {
-    eyebrow: '// backend + ai focus',
+    eyebrow: '// field notes',
+    heading: "Hey, I'm Devarsh..!",
     intro:
-      'I build software systems that are designed for real-world complexity — combining reliable backend engineering with practical AI solutions to create scalable, production-ready applications.',
-    highlights: [
+      "I build production-grade backend systems and AI-powered applications. My work centers on scalable APIs, intelligent workflows, and turning LLMs into practical products — I'm always looking for better ways to solve real-world problems with software.",
+    notes: [
       {
-        title: 'Backend architecture',
-        text: 'I build scalable backend services with Python, FastAPI, and DRF, designing clean APIs, maintainable service layers, and efficient data flows for complex applications.',
-        tags: ['Python', 'FastAPI', 'DRF', 'PostgreSQL'],
+        title: 'What I Build',
+        items: [
+          'Scalable APIs with FastAPI and DRF',
+          'An AI-powered financial platform backend',
+          'An order routing engine spanning a multi-ERP ecosystem, tracking orders from creation to shipment',
+          'Custom MCP servers',
+          'Voice agents for recruitment and customer support, wired straight into phone calls',
+        ],
       },
       {
-        title: 'AI-powered systems',
-        text: 'I develop intelligent applications using LLM workflows, RAG pipelines, and AI integrations, custom MCPs that transform business processes into smarter user experiences.',
-        tags: ['LLM Workflows', 'RAG', 'MCP'],
+        title: 'Current Obsession',
+        items: [
+          'Building LLM-powered workflows',
+          'Exploring LangChain and LangGraph',
+          'Azure AI Services',
+        ],
       },
       {
-        title: 'Production engineering',
-        text: 'I focus on building reliable systems with cloud infrastructure, background processing, observability, and scalable data architectures that perform in real-world environments.',
-        tags: ['AWS', 'Docker', 'Celery', 'Observability'],
+        title: 'Things You Should Know',
+        items: [
+          'Clean code makes me unusually happy.',
+          'I love turning complex ideas into simple products.',
+          'If I can improve the UI, I probably will.',
+          'Always curious. Always learning.',
+        ],
+      },
+      {
+        title: 'Beyond VS Code',
+        items: [
+          'Music is mandatory while coding.',
+          'Movies & web series are my reset button.',
+          'I enjoy competitive games.',
+          'Nature trips recharge my brain.',
+        ],
       },
     ],
   },
