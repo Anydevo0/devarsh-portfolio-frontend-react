@@ -17,9 +17,15 @@ interface ProjectCardProps {
  * keeps exactly one link in the tab order for the card itself, while the repo and
  * demo links stay real, separately-focusable anchors layered above it — nesting them
  * inside a card-wide anchor would be invalid and unusable by keyboard.
+ *
+ * `image_urls` already supports a full gallery — the project page renders every one
+ * of them — but the grid only ever needs a single representative shot per card. A
+ * "+N more" badge is the whole gallery affordance here; the actual browsing happens
+ * on the project page this card links to, which already lays every screenshot out.
  */
 export function ProjectCard({ project }: ProjectCardProps) {
   const thumbnail = project.image_urls[0]
+  const extraShots = project.image_urls.length - 1
 
   return (
     <article className="glass sheen group relative flex h-full flex-col overflow-hidden rounded-2xl transition-transform duration-500 hover:-translate-y-1.5">
@@ -43,6 +49,15 @@ export function ProjectCard({ project }: ProjectCardProps) {
         {project.is_featured && (
           <span className="glass-soft text-beam absolute top-3 left-3 rounded-full px-2.5 py-1 font-mono text-[0.625rem] tracking-[0.14em] uppercase">
             Featured
+          </span>
+        )}
+        {/* The card only ever shows the first screenshot; this is the one hint that
+            there's more to see before a visitor commits to opening the project. Only
+            appears past one image — a badge that always reads "+0 more" would be
+            noise on every card that has nothing further to show. */}
+        {extraShots > 0 && (
+          <span className="glass-soft text-mist/90 absolute top-3 right-3 rounded-full px-2.5 py-1 font-mono text-[0.625rem] tracking-[0.14em] uppercase">
+            +{extraShots} more
           </span>
         )}
       </div>

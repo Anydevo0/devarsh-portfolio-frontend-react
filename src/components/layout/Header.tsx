@@ -7,10 +7,10 @@ import { API_BASE_URL } from '@/lib/env'
 /**
  * Two destinations, deliberately.
  *
- * The home page is one continuous argument — about, skills, experience, work,
- * contact — and a nav listing all five duplicated the scroll rather than helping
- * anyone. What is left is the one in-page anchor worth jumping to and the one place
- * that is genuinely a different page.
+ * The home page is one continuous argument — about, work, contact — and a nav listing
+ * every section duplicated the scroll rather than helping anyone. What is left is the
+ * one in-page anchor worth jumping to and the one place that is genuinely a different
+ * page.
  */
 const NAV_ITEMS = [
   { label: 'About Me', to: '/#about' },

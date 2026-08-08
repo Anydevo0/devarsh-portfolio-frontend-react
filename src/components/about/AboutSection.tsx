@@ -27,10 +27,11 @@ function withHighlight(text: string, phrase: string) {
 /**
  * About, redone as a spread from an engineering notebook rather than a résumé
  * section: a handwritten intro, then four sticky notes standing in for the "focus
- * areas" cards every other portfolio uses. The route eyebrow stays — it is the site's
- * one structural device and every section carries it — but the heading it introduces
- * is handwritten rather than the display face the rest of the page uses, which is
- * why `Section.title` takes a node here instead of the usual string.
+ * areas" cards every other portfolio uses. No route eyebrow — a handwritten heading
+ * and an HTTP method sitting on the same line undercut each other, and the handwriting
+ * already says what kind of section this is. The heading is handwritten rather than
+ * the display face the rest of the page uses, which is why `Section.title` takes a
+ * node here instead of the usual string.
  *
  * All copy still comes from the client-side content store, so the heading, the
  * intro, and all four notes stay editable at /admin/content without a deploy.
@@ -41,7 +42,6 @@ export function AboutSection() {
   return (
     <Section
       id="about"
-      route="GET /about"
       title={
         <span className="relative inline-block">
           <span className="font-script text-lit -rotate-1 block text-4xl font-bold tracking-normal sm:text-5xl">

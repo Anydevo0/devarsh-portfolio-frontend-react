@@ -9,7 +9,7 @@ const SECTIONS = [
   {
     to: '/admin/projects',
     title: 'Projects',
-    description: 'Case studies shown in the Selected work section.',
+    description: 'Personal projects shown in the Things I Built section.',
   },
   { to: '/admin/blog', title: 'Blog', description: 'Long-form posts.' },
   { to: '/admin/contact', title: 'Contact', description: 'Submissions from the contact form.' },
