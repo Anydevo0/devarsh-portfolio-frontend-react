@@ -281,43 +281,15 @@ body[data-scene-hit='switch'] .scene-grab {
 }
 
 /* ---------------------------------------------------------------------------
-   Section backgrounds
-   Each major section gets its own treatment so the page reads as chapters rather
-   than one long scroll, but they are all built from the same three ingredients —
-   a ruled pattern, a colour pool, and at most one slow-moving element — so they
-   stay a family. Every one is masked to fade out before it reaches the text, and
-   every animation moves only transform or opacity.
+   Page atmosphere
+   Was once a background per section — a ruled grid, a colour pool, one slow-moving
+   element each — so the page read as chapters rather than one continuous run.
+   `PageAtmosphere` replaced all of it with a single environment spanning About
+   through Contact; what remains here is the one piece of that system still in use.
    --------------------------------------------------------------------------- */
 
-/* A ruled grid, faded out at the edges so it never meets the section boundary on
-   a hard line. `--grid-size` and `--grid-ink` are set per variant. */
-.bg-grid {
-  background-image:
-    linear-gradient(to right, var(--grid-ink) 1px, transparent 1px),
-    linear-gradient(to bottom, var(--grid-ink) 1px, transparent 1px);
-  background-size: var(--grid-size) var(--grid-size);
-  mask-image: radial-gradient(ellipse 80% 65% at 50% 45%, #000 20%, transparent 78%);
-  -webkit-mask-image: radial-gradient(ellipse 80% 65% at 50% 45%, #000 20%, transparent 78%);
-}
-
-/* Glowing nodes on the skills grid — a distributed-systems read, and the reason
-   that section's pattern is a grid rather than dots. */
-@keyframes node-pulse {
-  0%,
-  100% {
-    opacity: 0.25;
-    transform: scale(1);
-  }
-  50% {
-    opacity: 0.9;
-    transform: scale(1.35);
-  }
-}
-.animate-node {
-  animation: node-pulse 4.5s ease-in-out infinite;
-}
-
-/* The beam running down the experience section, behind the timeline rail. */
+/* The light seam running down `PageAtmosphere`. Named for the section it used to
+   sit behind alone, back when each section had its own; it now runs the full page. */
 @keyframes beam-breathe {
   0%,
   100% {
@@ -332,38 +304,6 @@ body[data-scene-hit='switch'] .scene-grab {
 .animate-beam {
   animation: beam-breathe 7s ease-in-out infinite;
   transform-origin: top;
-}
-
-/* Outlined shapes drifting behind the projects grid. Two speeds and both
-   directions, so they never appear to move as a block. */
-@keyframes drift-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
-}
-.animate-spin-slow {
-  animation: drift-spin 48s linear infinite;
-}
-.animate-spin-slower {
-  animation: drift-spin 72s linear infinite reverse;
-}
-
-/* The horizon grid flowing toward the viewer. Scrolls exactly one 64px tile per
-   cycle so the loop is seamless, and moves background-position rather than the
-   element, which keeps the perspective transform from being recomputed. */
-@keyframes horizon-flow {
-  from {
-    background-position: 0 0;
-  }
-  to {
-    background-position: 0 64px;
-  }
-}
-.animate-horizon {
-  animation: horizon-flow 6s linear infinite;
 }
 
 /* A faint film of noise over the whole public shell. Large flat gradient fields
