@@ -60,10 +60,10 @@ export function Section({ id, route, title, lede, children, action }: SectionPro
 /**
  * The section eyebrow, written as an API route — the site's structural device where a
  * section's own address is worth stating. Not every section takes one: the method is
- * real, so it only appears where it says something true and useful, which today is
- * just the contact form's `POST`, the one place a visitor writes something rather
- * than reads. Numbered markers were the alternative and were rejected: these sections
- * are not a sequence, so numbering them would assert an order that does not exist.
+ * real, so it only appears where it says something true and useful about that section
+ * specifically, rather than as a label every section carries by default. Numbered
+ * markers were the alternative and were rejected: these sections are not a sequence,
+ * so numbering them would assert an order that does not exist.
  */
 function RouteLabel({ value }: { value: string }) {
   const [method, ...rest] = value.split(' ')

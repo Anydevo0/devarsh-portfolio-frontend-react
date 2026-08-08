@@ -12,8 +12,12 @@ const DIRECT_LINKS = [
 ]
 
 /**
- * The one section a visitor writes to rather than reads — hence the POST in its
- * route label, the only one on the page.
+ * The one section a visitor writes to rather than reads.
+ *
+ * No route eyebrow: the form itself is the whole statement of what this section is
+ * for, and the label sat directly over it rather than beside it the way it does on
+ * every other section header, which read as clutter on the one section asking for
+ * an actual commitment from the visitor rather than their attention.
  *
  * The form is paired with the direct channels rather than replacing them: a recruiter
  * who would rather use their own mail client should not have to hunt for an address.
@@ -22,7 +26,6 @@ export function ContactSection() {
   return (
     <Section
       id="contact"
-      route="POST /contact"
       title="Let's build something"
       lede="Open to backend and AI engineering roles, and always glad to talk through an interesting systems problem."
     >

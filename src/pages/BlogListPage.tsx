@@ -49,16 +49,12 @@ export function BlogListPage() {
       <div className="aurora aurora--halo animate-drift-two" aria-hidden="true" />
 
       <header className="relative">
-        <p className="glass-soft inline-flex items-center gap-2.5 rounded-full py-1 pr-3.5 pl-2.5 font-mono text-[0.6875rem] tracking-[0.14em] uppercase">
-          <span className="text-pulse">GET</span>
-          <span className="bg-edge h-3 w-px" aria-hidden="true" />
-          <span className="text-fog">/blog</span>
-        </p>
-        <h1 className="font-tech text-section text-lit mt-5 font-bold tracking-[-0.03em]">
-          Notes from the build
+        <h1 className="font-tech text-section text-lit font-bold tracking-[-0.03em]">
+          Things I&apos;ve Written
         </h1>
         <p className="text-fog text-lede mt-5 max-w-2xl">
-          Backend architecture, AI systems, and the things that only show up in production.
+          Backend architecture, AI systems, and the lessons that only show up in
+          production. Have a look through — something here might be useful.
         </p>
       </header>
 

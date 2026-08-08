@@ -1,4 +1,5 @@
 import { AboutSection } from '@/components/about/AboutSection'
+import { AssistantCallout } from '@/components/chat/AssistantCallout'
 import { ContactSection } from '@/components/contact/ContactSection'
 import { Hero } from '@/components/hero/Hero'
 import { PageAtmosphere } from '@/components/layout/PageAtmosphere'
@@ -26,6 +27,7 @@ export function HomePage() {
         <PageAtmosphere />
         <AboutSection />
         <ProjectsSection />
+        <AssistantCallout />
         <ContactSection />
       </div>
     </main>
