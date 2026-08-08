@@ -1,5 +1,3 @@
-import type { CSSProperties } from 'react'
-
 import { usePrefersReducedMotion } from '@/hooks/usePrefersReducedMotion'
 
 /**
@@ -8,35 +6,27 @@ import { usePrefersReducedMotion } from '@/hooks/usePrefersReducedMotion'
  * Deliberately a single element spanning About through Contact rather than a backdrop
  * per section. Five separate treatments made the page read as five pages: each one
  * ended on a visible seam, and the eye kept getting told "new thing" where the content
- * was actually continuing an argument. Here the grid runs unbroken from top to bottom
- * and only the colour drifts, so sections are separated by space and typography — the
- * things that should be doing that job — while the environment stays one place.
+ * was actually continuing an argument. Sections are separated by space and typography
+ * — the things that should be doing that job — while the environment stays one place.
  *
- * Everything is a plain gradient or a repeating gradient. No `filter: blur()`, which
- * on an element this tall is expensive to repaint; the pools are soft because the
- * gradients themselves are soft.
+ * Used to carry a ruled grid the full height of the page. Right below the hero's own
+ * 3D desk, a technical grid read as the room's floor continuing into flat 2D — a HUD
+ * under the writing rather than atmosphere behind it. Dropping it left the colour wash
+ * and the light seam to carry the page on their own, which is what they were already
+ * doing the more interesting share of; two slow, soft glows now take the grid's old
+ * job of keeping a static wash from feeling inert, using the exact drift already
+ * established for the hero's own fallback poster so the motion reads as one idea
+ * continuing rather than a second kind of movement introduced partway down the page.
+ *
+ * Everything is a plain gradient. No `filter: blur()`, which on an element this tall
+ * is expensive to repaint; the pools are soft because the gradients themselves are
+ * soft, and the drift moves `transform` only, so it composites without a repaint.
  */
 export function PageAtmosphere() {
   const prefersReducedMotion = usePrefersReducedMotion()
 
   return (
     <div className="pointer-events-none absolute inset-0 -z-10 overflow-hidden" aria-hidden="true">
-      {/* The through-line: one grid, unbroken for the whole scroll, faded at both
-          ends so it emerges out of the hero and dissolves before the footer. */}
-      <div
-        className="bg-grid absolute inset-0"
-        style={
-          {
-            '--grid-size': '58px',
-            '--grid-ink': 'rgba(232,237,247,0.032)',
-            maskImage:
-              'linear-gradient(to bottom, transparent, #000 8%, #000 88%, transparent 99%)',
-            WebkitMaskImage:
-              'linear-gradient(to bottom, transparent, #000 8%, #000 88%, transparent 99%)',
-          } as CSSProperties
-        }
-      />
-
       {/* Colour drifts down the page in one pass: blue where the writing is, violet
           through the work, cyan gathering toward the contact form. Positioned as
           percentages of the whole run, so the transitions land between sections
@@ -51,6 +41,27 @@ export function PageAtmosphere() {
             'radial-gradient(64rem 36rem at 92% 66%, rgba(139,92,246,0.09), transparent 60%)',
             'radial-gradient(70rem 38rem at 48% 98%, rgba(91,127,255,0.13), transparent 62%)',
           ].join(','),
+        }}
+      />
+
+      {/* Two soft pools, each parked where a colour above is already strongest, so the
+          drift reads as that pool breathing rather than a new light arriving. One per
+          direction (see `drift-one`/`drift-two`) keeps them from ever drifting in
+          lockstep, which is what would make two circles read as one blinking thing. */}
+      <div
+        className={`absolute top-[8%] left-[-6%] h-[42rem] w-[42rem] rounded-full ${
+          prefersReducedMotion ? '' : 'animate-drift-one'
+        }`}
+        style={{
+          background: 'radial-gradient(circle, rgba(91,127,255,0.16), transparent 68%)',
+        }}
+      />
+      <div
+        className={`absolute top-[72%] right-[-8%] h-[46rem] w-[46rem] rounded-full ${
+          prefersReducedMotion ? '' : 'animate-drift-two'
+        }`}
+        style={{
+          background: 'radial-gradient(circle, rgba(34,211,238,0.13), transparent 66%)',
         }}
       />
 

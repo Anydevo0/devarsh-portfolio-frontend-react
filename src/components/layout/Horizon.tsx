@@ -1,69 +1,41 @@
-import { usePrefersReducedMotion } from '@/hooks/usePrefersReducedMotion'
-
 /**
  * The page's vanishing point, sitting between the last section and the footer.
  *
- * A ground plane laid into perspective and ruled with the same grid the rest of the
- * page carries, running away to a lit horizon. It replaces a decorative wave, which
- * read as an ornament stuck onto the top of the footer; this reads as the environment
- * continuing past the content and receding, which is the same thing the 3D hero does
- * at the other end of the page. Beginning and end are then the same idea.
+ * Used to carry a ruled ground plane in perspective, tipped away toward a lit
+ * horizon — a technical HUD-floor answer to the same question the hero's 3D room
+ * asks with an actual room. Two grids bookending the page argued the same point
+ * twice; dropping this one and keeping `PageAtmosphere`'s drifting glow as the only
+ * texture between hero and footer lets the ending be quiet instead. What is left is
+ * the thing the grid was drawn on top of anyway: light gathering low on the page and
+ * settling, rather than a floor rendered for nobody to stand on.
  *
- * Built from two repeating gradients on one transformed element — no canvas, no
- * geometry, and only `background-position` animates.
+ * Three stacked radial gradients, same light as before — no canvas, no geometry,
+ * nothing that animates. A static glow earns its keep here by not moving: the hero
+ * opens the page with motion, and the page should not close on more of it.
  */
 export function Horizon() {
-  const prefersReducedMotion = usePrefersReducedMotion()
-
   return (
-    <div
-      className="pointer-events-none relative h-56 w-full overflow-hidden sm:h-72"
-      aria-hidden="true"
-    >
-      {/* The glow gathering above the horizon, then the horizon line itself. */}
+    <div className="pointer-events-none relative h-40 w-full overflow-hidden sm:h-52" aria-hidden="true">
       <div
-        className="absolute inset-x-0 top-[38%] h-36 -translate-y-full"
+        className="absolute inset-x-0 top-1/2 h-56 -translate-y-1/2"
         style={{
           background:
-            'radial-gradient(55% 100% at 50% 100%, rgba(91,127,255,0.22), transparent 72%)',
+            'radial-gradient(60% 100% at 50% 55%, rgba(91,127,255,0.16), transparent 70%)',
         }}
       />
       <div
-        className="absolute inset-x-0 top-[38%] h-px"
+        className="absolute inset-x-0 top-1/2 h-px -translate-y-1/2"
         style={{
           background:
-            'linear-gradient(90deg, transparent, rgba(91,127,255,0.6) 22%, rgba(34,211,238,0.85) 50%, rgba(139,92,246,0.6) 78%, transparent)',
+            'linear-gradient(90deg, transparent, rgba(91,127,255,0.45) 24%, rgba(34,211,238,0.65) 50%, rgba(139,92,246,0.45) 76%, transparent)',
         }}
       />
       <div
-        className="absolute inset-x-0 top-[38%] h-16"
+        className="absolute inset-x-0 top-1/2 h-32"
         style={{
-          background:
-            'radial-gradient(50% 100% at 50% 0%, rgba(34,211,238,0.14), transparent 70%)',
+          background: 'radial-gradient(50% 100% at 50% 0%, rgba(34,211,238,0.1), transparent 72%)',
         }}
       />
-
-      {/* The receding plane. `perspective` on the parent plus a rotateX turn the two
-          repeating gradients into a ground grid converging at the horizon.
-          The perspective distance and the tilt have to be tuned together: too steep a
-          rotation against too short a perspective compresses the whole plane into a
-          couple of pixels and the grid vanishes. */}
-      <div className="absolute inset-x-0 top-[38%] bottom-0" style={{ perspective: '440px' }}>
-        <div
-          className={`absolute inset-x-[-75%] top-0 h-[560px] origin-top ${
-            prefersReducedMotion ? '' : 'animate-horizon'
-          }`}
-          style={{
-            transform: 'rotateX(71deg)',
-            backgroundImage:
-              'linear-gradient(to right, rgba(120,150,255,0.42) 1px, transparent 1px), linear-gradient(to bottom, rgba(120,150,255,0.34) 1px, transparent 1px)',
-            backgroundSize: '64px 64px',
-            maskImage: 'linear-gradient(to bottom, #000 2%, rgba(0,0,0,0.55) 32%, transparent 78%)',
-            WebkitMaskImage:
-              'linear-gradient(to bottom, #000 2%, rgba(0,0,0,0.55) 32%, transparent 78%)',
-          }}
-        />
-      </div>
     </div>
   )
 }
