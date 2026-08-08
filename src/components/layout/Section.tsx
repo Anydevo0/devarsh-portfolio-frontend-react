@@ -4,8 +4,13 @@ import { Reveal } from '@/components/common/Reveal'
 
 interface SectionProps {
   id: string
-  /** HTTP method + path, e.g. `GET /projects`. See `RouteLabel`. */
-  route: string
+  /**
+   * HTTP method + path, e.g. `POST /contact`. See `RouteLabel`. Optional: a section
+   * with nothing distinctive to say about its own address — About and Projects, whose
+   * headings already carry the section's identity — simply omits it rather than
+   * printing a label for its own sake.
+   */
+  route?: string
   /**
    * Usually a plain string, styled by the `h2` below. `ReactNode` so a section can
    * substitute its own styling on the same element — About does this to make its
@@ -19,9 +24,9 @@ interface SectionProps {
 }
 
 /**
- * Every section on the public site is built from this, so the vertical rhythm, the
- * heading scale, and the eyebrow treatment are defined once rather than re-tuned per
- * section — which is what keeps six visually distinct sections reading as one page.
+ * Every section on the public site is built from this, so the vertical rhythm and the
+ * heading scale are defined once rather than re-tuned per section — which is what
+ * keeps several visually distinct sections reading as one page.
  */
 export function Section({ id, route, title, lede, children, action }: SectionProps) {
   return (
@@ -35,8 +40,10 @@ export function Section({ id, route, title, lede, children, action }: SectionPro
         <Reveal>
           <header className="flex flex-wrap items-end justify-between gap-6">
             <div className="max-w-2xl">
-              <RouteLabel value={route} />
-              <h2 className="font-tech text-section text-lit mt-5 font-bold tracking-[-0.03em] text-balance">
+              {route && <RouteLabel value={route} />}
+              <h2
+                className={`font-tech text-section text-lit font-bold tracking-[-0.03em] text-balance ${route ? 'mt-5' : ''}`}
+              >
                 {title}
               </h2>
               {lede && <p className="text-fog text-lede mt-5">{lede}</p>}
@@ -51,13 +58,11 @@ export function Section({ id, route, title, lede, children, action }: SectionPro
 }
 
 /**
- * The section eyebrow, written as an API route.
- *
- * This is the site's structural device, and it is meant to carry information rather
- * than decorate: the subject builds HTTP services, so the sections are addressed the
- * way his own work is. The method is real — every section that presents information
- * is a GET, and the contact form, the one place a visitor writes something, is the
- * only POST. Numbered markers were the alternative and were rejected: these sections
+ * The section eyebrow, written as an API route — the site's structural device where a
+ * section's own address is worth stating. Not every section takes one: the method is
+ * real, so it only appears where it says something true and useful, which today is
+ * just the contact form's `POST`, the one place a visitor writes something rather
+ * than reads. Numbered markers were the alternative and were rejected: these sections
  * are not a sequence, so numbering them would assert an order that does not exist.
  */
 function RouteLabel({ value }: { value: string }) {

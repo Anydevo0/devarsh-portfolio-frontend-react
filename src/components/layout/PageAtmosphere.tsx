@@ -55,8 +55,7 @@ export function PageAtmosphere() {
       />
 
       {/* A single light seam running the height of the page, just off the measure's
-          left edge. It is what the experience timeline's rail appears to be drawn
-          from, and it ties the whole run together without repeating per section. */}
+          left edge. It ties the whole run together without repeating per section. */}
       <div
         className={`absolute top-[6%] bottom-[10%] left-[max(1.5rem,calc(50%-34rem))] w-px ${
           prefersReducedMotion ? 'opacity-30' : 'animate-beam'
